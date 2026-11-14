@@ -1,0 +1,29 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0196-namespace-psa-baseline
+  labels:
+    controlId: C-0196
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0196/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - namespaces
+  matchConditions:
+  - name: namespace-requires-baseline
+    expression: |-
+      !has(object.metadata.labels) || !('pod-security.kubernetes.io/enforce' in object.metadata.labels) ||
+      !(object.metadata.labels['pod-security.kubernetes.io/enforce'] in ['baseline', 'restricted'])
+  validations:
+  - expression: "false"
+    message: Enforce baseline or restricted Pod Security Admission on this namespace.

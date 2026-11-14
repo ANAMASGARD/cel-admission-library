@@ -1,0 +1,31 @@
+[
+  {
+    "name": "Unlabelled Namespace",
+    "template": "namespace.yaml",
+    "expected": "fail"
+  },
+  {
+    "name": "baseline",
+    "template": "namespace.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "metadata.labels={\"admission-policy-test\": \"abc\", \"pod-security.kubernetes.io/enforce\": \"baseline\"}"
+    ]
+  },
+  {
+    "name": "restricted",
+    "template": "namespace.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "metadata.labels={\"admission-policy-test\": \"abc\", \"pod-security.kubernetes.io/enforce\": \"restricted\"}"
+    ]
+  },
+  {
+    "name": "privileged",
+    "template": "namespace.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "metadata.labels={\"admission-policy-test\": \"abc\", \"pod-security.kubernetes.io/enforce\": \"privileged\"}"
+    ]
+  }
+]

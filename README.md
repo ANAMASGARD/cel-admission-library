@@ -116,6 +116,7 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0195](https://kubescape.io/docs/controls/c-0195/) | Minimize the admission of containers wishing to share the host IPC namespace | [kubescape-c-0195-deny-resources-sharing-host-ipc-namespace](/docs/policies-based-on-kubescape-controls/kubescape-c-0195-deny-resources-sharing-host-ipc-namespace.md) | not configurable |
 | [C-0197](https://kubescape.io/docs/controls/c-0197/) | Minimize the admission of containers with allowPrivilegeEscalation | [kubescape-c-0197-deny-containers-with-allow-privilege-escalation](/docs/policies-based-on-kubescape-controls/kubescape-c-0197-deny-containers-with-allow-privilege-escalation.md) | not configurable |
 | [C-0259](https://kubescape.io/docs/controls/c-0259/) | Workload with credential access | [kubescape-c-0259-sensitive-environment-variables](/docs/policies-based-on-kubescape-controls/kubescape-c-0259-sensitive-environment-variables.md) | sensitiveKeyNames, sensitiveValues and allowlists |
+| [C-0196](https://kubescape.io/docs/controls/c-0196/) | Minimize the admission of containers wishing to share the host network namespace | [kubescape-c-0196-namespace-psa-baseline](/docs/policies-based-on-kubescape-controls/kubescape-c-0196-namespace-psa-baseline.md) | not configurable |
 
 ## Testing Policies
 
