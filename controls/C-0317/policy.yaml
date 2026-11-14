@@ -1,0 +1,38 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0317-worker-resource-ceilings
+  labels:
+    controlId: C-0317
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0317/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ate.dev
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - workerpools
+  variables:
+  - name: limits
+    expression: object.spec.?template.?resources.?limits.orValue({})
+  validations:
+  - expression: |-
+      params == null || !has(params.settings) || !has(params.settings.workerCpuLimitMax) || params.settings.workerCpuLimitMax.size() == 0 ||
+      (has(variables.limits.cpu) && isQuantity(string(variables.limits.cpu)) && params.settings.workerCpuLimitMax.all(m, isQuantity(m) &&
+            quantity(string(variables.limits.cpu)).compareTo(quantity(m)) <= 0))
+    message: Provide a cpu limit within the configured ceiling.
+  - expression: |-
+      params == null || !has(params.settings) || !has(params.settings.workerMemoryLimitMax) || params.settings.workerMemoryLimitMax.size() == 0 ||
+      (has(variables.limits.memory) && isQuantity(string(variables.limits.memory)) && params.settings.workerMemoryLimitMax.all(m, isQuantity(m) &&
+            quantity(string(variables.limits.memory)).compareTo(quantity(m)) <= 0))
+    message: Provide a memory limit within the configured ceiling.
+  paramKind:
+    apiVersion: kubescape.io/v1
+    kind: ControlConfiguration

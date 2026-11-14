@@ -126,6 +126,8 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0301](https://kubescape.io/docs/controls/c-0301/) | Agent Sandbox egress policy enforcement | [kubescape-c-0301-scoped-agent-egress](/docs/policies-based-on-kubescape-controls/kubescape-c-0301-scoped-agent-egress.md) | not configurable |
 | [C-0315](https://kubescape.io/docs/controls/c-0315/) | Agent Sandbox strict egress policy | [kubescape-c-0315-strict-agent-egress](/docs/policies-based-on-kubescape-controls/kubescape-c-0315-strict-agent-egress.md) | agentSandboxEgressMode |
 | [C-0316](https://kubescape.io/docs/controls/c-0316/) | Agent Sandbox claim override restrictions | [kubescape-c-0316-agent-claim-overrides](/docs/policies-based-on-kubescape-controls/kubescape-c-0316-agent-claim-overrides.md) | not configurable |
+| [C-0303](https://kubescape.io/docs/controls/c-0303/) | Agent Sandbox resource ceilings | [kubescape-c-0303-sandbox-resource-limits](/docs/policies-based-on-kubescape-controls/kubescape-c-0303-sandbox-resource-limits.md) | sandboxCpuLimitMax, sandboxMemoryLimitMax |
+| [C-0317](https://kubescape.io/docs/controls/c-0317/) | Agent Substrate Worker Pod resource ceilings | [kubescape-c-0317-worker-resource-ceilings](/docs/policies-based-on-kubescape-controls/kubescape-c-0317-worker-resource-ceilings.md) | workerCpuLimitMax, workerMemoryLimitMax |
 
 ## Testing Policies
 

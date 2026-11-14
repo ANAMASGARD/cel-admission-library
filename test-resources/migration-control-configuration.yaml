@@ -12,3 +12,11 @@ settings:
   - registry.example/team
   agentSandboxEgressMode:
   - strict
+  workerCpuLimitMax:
+  - '1'
+  workerMemoryLimitMax:
+  - 256Mi
+  sandboxCpuLimitMax:
+  - '1'
+  sandboxMemoryLimitMax:
+  - 256Mi

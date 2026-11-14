@@ -39,6 +39,22 @@ spec:
                   type: array
                   items:
                     type: string
+                workerCpuLimitMax:
+                  type: array
+                  items:
+                    type: string
+                workerMemoryLimitMax:
+                  type: array
+                  items:
+                    type: string
+                sandboxCpuLimitMax:
+                  type: array
+                  items:
+                    type: string
+                sandboxMemoryLimitMax:
+                  type: array
+                  items:
+                    type: string
                 hardenedSandboxRuntimeClasses:
                   items:
                     type: string

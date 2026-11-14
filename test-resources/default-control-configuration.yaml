@@ -6,6 +6,10 @@ settings:
   floatingImageTags: []
   imageDigestExemptRepositories: []
   agentSandboxEgressMode: ["managed"]
+  workerCpuLimitMax: []
+  workerMemoryLimitMax: []
+  sandboxCpuLimitMax: []
+  sandboxMemoryLimitMax: []
   hardenedSandboxRuntimeClasses:
   - gvisor
   cpuLimitMax: 5

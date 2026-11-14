@@ -1,0 +1,28 @@
+[
+  {
+    "name": "At configured maxima",
+    "template": "agent-worker-pool.yaml",
+    "expected": "pass",
+    "param_template": "migration-control-configuration.yaml",
+    "field_change_list": [
+      "spec.template.resources={\"limits\":{\"cpu\":\"1000m\",\"memory\":\"256Mi\"}}"
+    ]
+  },
+  {
+    "name": "Exceeded CPU",
+    "template": "agent-worker-pool.yaml",
+    "expected": "fail",
+    "param_template": "migration-control-configuration.yaml",
+    "field_change_list": [
+      "spec.template.resources={\"limits\":{\"cpu\":\"2\",\"memory\":\"1Mi\"}}"
+    ]
+  },
+  {
+    "name": "Missing limits",
+    "template": "agent-worker-pool.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.template.resources={}"
+    ]
+  }
+]
