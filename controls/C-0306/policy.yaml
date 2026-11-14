@@ -1,0 +1,68 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0306-images-pinned-to-digests
+  labels:
+    controlId: C-0306
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0306/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+      - pods/ephemeralcontainers
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - deployments
+      - replicasets
+      - daemonsets
+      - statefulsets
+    - apiGroups:
+      - batch
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - jobs
+      - cronjobs
+  variables:
+  - name: containers
+    expression: |-
+      object.kind == 'Pod'
+        ? object.spec.containers + (has(object.spec.initContainers) ? object.spec.initContainers : []) + (has(object.spec.ephemeralContainers) ? object.spec.ephemeralContainers : [])
+        : object.kind in ['Deployment','ReplicaSet','DaemonSet','StatefulSet','Job']
+          ? object.spec.template.spec.containers + (has(object.spec.template.spec.initContainers) ? object.spec.template.spec.initContainers : []) + (has(object.spec.template.spec.ephemeralContainers) ? object.spec.template.spec.ephemeralContainers : [])
+          : object.kind == 'CronJob'
+            ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : []) + (has(object.spec.jobTemplate.spec.template.spec.ephemeralContainers) ? object.spec.jobTemplate.spec.template.spec.ephemeralContainers : [])
+            : []
+  validations:
+  - expression: |-
+      variables.containers.all(c,
+        (params != null && has(params.settings) && has(params.settings.imageDigestExemptRepositories) &&
+         params.settings.imageDigestExemptRepositories.exists(r, c.image == r ||
+           c.image.startsWith(r + '/') || c.image.startsWith(r + ':') || c.image.startsWith(r + '@'))) ||
+        c.image.matches('@(sha256:[a-f0-9]{64}|sha512:[a-f0-9]{128}|blake3:[a-f0-9]{64})$') ||
+        (!c.image.matches('@(sha256|sha512|blake3):') &&
+         c.image.matches('@[a-z0-9]+([.+_-][a-z0-9]+)*:[a-zA-Z0-9=_-]+$'))
+      )
+    message: Pin container images to an OCI digest.
+  paramKind:
+    apiVersion: kubescape.io/v1
+    kind: ControlConfiguration

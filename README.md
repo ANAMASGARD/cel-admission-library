@@ -117,6 +117,9 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0197](https://kubescape.io/docs/controls/c-0197/) | Minimize the admission of containers with allowPrivilegeEscalation | [kubescape-c-0197-deny-containers-with-allow-privilege-escalation](/docs/policies-based-on-kubescape-controls/kubescape-c-0197-deny-containers-with-allow-privilege-escalation.md) | not configurable |
 | [C-0259](https://kubescape.io/docs/controls/c-0259/) | Workload with credential access | [kubescape-c-0259-sensitive-environment-variables](/docs/policies-based-on-kubescape-controls/kubescape-c-0259-sensitive-environment-variables.md) | sensitiveKeyNames, sensitiveValues and allowlists |
 | [C-0196](https://kubescape.io/docs/controls/c-0196/) | Minimize the admission of containers wishing to share the host network namespace | [kubescape-c-0196-namespace-psa-baseline](/docs/policies-based-on-kubescape-controls/kubescape-c-0196-namespace-psa-baseline.md) | not configurable |
+| [C-0253](https://kubescape.io/docs/controls/c-0253/) | Deprecated Kubernetes image registry | [kubescape-c-0253-deprecated-kubernetes-registry](/docs/policies-based-on-kubescape-controls/kubescape-c-0253-deprecated-kubernetes-registry.md) | not configurable |
+| [C-0305](https://kubescape.io/docs/controls/c-0305/) | No rolling update strategy | [kubescape-c-0305-rolling-update-strategy](/docs/policies-based-on-kubescape-controls/kubescape-c-0305-rolling-update-strategy.md) | not configurable |
+| [C-0306](https://kubescape.io/docs/controls/c-0306/) | Images not pinned to digest | [kubescape-c-0306-images-pinned-to-digests](/docs/policies-based-on-kubescape-controls/kubescape-c-0306-images-pinned-to-digests.md) | imageDigestExemptRepositories |
 
 ## Testing Policies
 

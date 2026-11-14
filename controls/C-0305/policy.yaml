@@ -1,0 +1,24 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0305-rolling-update-strategy
+  labels:
+    controlId: C-0305
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0305/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - deployments
+  validations:
+  - expression: '!has(object.spec.strategy) || !has(object.spec.strategy.type) || object.spec.strategy.type == ''RollingUpdate'''
+    message: Use the RollingUpdate deployment strategy.

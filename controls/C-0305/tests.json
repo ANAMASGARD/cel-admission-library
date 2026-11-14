@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Default strategy",
+    "template": "deployment.yaml",
+    "expected": "pass"
+  },
+  {
+    "name": "Explicit rolling update",
+    "template": "deployment.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.strategy.type=RollingUpdate"
+    ]
+  },
+  {
+    "name": "Recreate",
+    "template": "deployment.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.strategy.type=Recreate"
+    ]
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "name": "registry.example/app:v1",
+    "template": "pod.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.containers.[0].image=registry.example/app:v1"
+    ]
+  },
+  {
+    "name": "registry.example/app@sha256:abcd",
+    "template": "pod.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.containers.[0].image=registry.example/app@sha256:abcd"
+    ]
+  },
+  {
+    "name": "registry.example/app@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "template": "pod.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.containers.[0].image=registry.example/app@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ]
+  },
+  {
+    "name": "registry.example/app@other:123",
+    "template": "pod.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.containers.[0].image=registry.example/app@other:123"
+    ]
+  },
+  {
+    "name": "Repository exemption boundary for registry.example/team/image:v1",
+    "template": "pod.yaml",
+    "param_template": "migration-control-configuration.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.containers.[0].image=registry.example/team/image:v1"
+    ]
+  },
+  {
+    "name": "Repository exemption boundary for registry.example/teammate/image:v1",
+    "template": "pod.yaml",
+    "param_template": "migration-control-configuration.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.containers.[0].image=registry.example/teammate/image:v1"
+    ]
+  }
+]

@@ -8,3 +8,5 @@ settings:
   - gcr.io
   floatingImageTags:
   - stable
+  imageDigestExemptRepositories:
+  - registry.example/team

@@ -31,6 +31,10 @@ spec:
                   type: array
                   items:
                     type: string
+                imageDigestExemptRepositories:
+                  type: array
+                  items:
+                    type: string
                 hardenedSandboxRuntimeClasses:
                   items:
                     type: string

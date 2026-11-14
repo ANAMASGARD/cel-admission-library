@@ -4,6 +4,7 @@ metadata:
   name: placeholder
 settings:
   floatingImageTags: []
+  imageDigestExemptRepositories: []
   hardenedSandboxRuntimeClasses:
   - gvisor
   cpuLimitMax: 5
