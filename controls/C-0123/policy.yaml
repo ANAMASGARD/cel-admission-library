@@ -1,0 +1,42 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0123-ensure-that-the-admission-control-plugin-alwayspullimages-is
+  labels:
+    controlId: C-0123
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0123/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: |-
+      has(object.metadata.namespace) && object.metadata.namespace == 'kube-system' &&
+      object.spec.containers.size() == 1 && has(object.spec.containers[0].command) &&
+      object.spec.containers[0].command.size() > 0 &&
+      object.spec.containers[0].command[0].endsWith('kube-apiserver')
+  variables:
+  - name: flags
+    expression: |-
+      object.spec.containers[0].command +
+      (has(object.spec.containers[0].args) ? object.spec.containers[0].args : [])
+  - name: values
+    expression: |-
+      variables.flags.filter(a, a.findAll('--enable-admission-plugins=[^ ]+').size() == 1)
+        .map(a, a.find('--enable-admission-plugins=[^ ]+').substring(27))
+  validations:
+  - expression: |-
+      variables.flags.exists(a, a.contains('--enable-admission-plugins')) &&
+      variables.values.all(v, 'AlwaysPullImages' in v.split(','))
+    message: Ensure that the admission control plugin AlwaysPullImages is set.
