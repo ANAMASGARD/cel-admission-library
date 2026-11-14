@@ -23,6 +23,8 @@ This allows older configurations to keep working without CEL evaluation errors.
 A `paramRef` pointing at a nonexistent configuration is still governed by its
 `parameterNotFoundAction`.
 
+The shipped `imageRepositoryAllowList` is now empty, matching the scanner default. To preserve the earlier default on upgrade, set it to `["gcr.io"]` in the bound ControlConfiguration.
+
 When `imageRepositoryAllowList` includes `docker.io`, unqualified images such as
 `nginx`, `nginx:1.27`, `nginx@sha256:...`, and `library/nginx` are allowed by the
 registry check. Explicit registry hosts and ports must be separately allowlisted.

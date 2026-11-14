@@ -27,6 +27,10 @@ spec:
                   items:
                     type: string
                   type: array
+                floatingImageTags:
+                  type: array
+                  items:
+                    type: string
                 hardenedSandboxRuntimeClasses:
                   items:
                     type: string

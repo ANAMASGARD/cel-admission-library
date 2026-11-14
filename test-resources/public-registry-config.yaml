@@ -1,0 +1,7 @@
+apiVersion: kubescape.io/v1
+kind: ControlConfiguration
+metadata:
+  name: public-registry-test
+settings:
+  publicRegistries:
+  - docker.io/library/busybox

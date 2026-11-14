@@ -1,0 +1,10 @@
+apiVersion: kubescape.io/v1
+kind: ControlConfiguration
+metadata:
+  name: placeholder
+settings:
+  imageRepositoryAllowList:
+  - docker.io
+  - gcr.io
+  floatingImageTags:
+  - stable

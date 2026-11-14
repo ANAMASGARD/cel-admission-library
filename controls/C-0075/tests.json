@@ -18,9 +18,9 @@
         ]
     },
     {
-        "name": "Pod having containers with image \"test:onlyletters\" and \"ImagePullPolicy\" set to \"IfNotPresent\" is denied",
+        "name": "Pod having containers with image \"test:onlyletters\" and \"ImagePullPolicy\" set to \"IfNotPresent\" is allowed",
         "template": "pod.yaml",
-        "expected": "fail",
+        "expected": "pass",
         "field_change_list": [
             "spec.containers.[0].image=test:onlyletters",
             "spec.containers.[0].imagePullPolicy=IfNotPresent"
@@ -81,9 +81,9 @@
         ]
     },
     {
-        "name": "Deployment having containers with image \"test:onlyletters\" and \"ImagePullPolicy\" set to \"IfNotPresent\" is denied",
+        "name": "Deployment having containers with image \"test:onlyletters\" and \"ImagePullPolicy\" set to \"IfNotPresent\" is allowed",
         "template": "deployment.yaml",
-        "expected": "fail",
+        "expected": "pass",
         "field_change_list": [
             "spec.template.spec.containers.[0].image=test:onlyletters",
             "spec.template.spec.containers.[0].imagePullPolicy=IfNotPresent"
@@ -185,6 +185,35 @@
             "spec.jobTemplate.spec.template.spec.initContainers.[0].image=alpine",
             "spec.jobTemplate.spec.template.spec.initContainers.[0].image=test:latest",
             "spec.jobTemplate.spec.template.spec.initContainers.[0].imagePullPolicy=Always"
+        ]
+    },
+    {
+        "name": "Configured floating tag",
+        "template": "pod.yaml",
+        "expected": "fail",
+        "param_template": "migration-control-configuration.yaml",
+        "field_change_list": [
+            "spec.containers.[0].image=app:stable",
+            "spec.containers.[0].imagePullPolicy=Never"
+        ]
+    },
+    {
+        "name": "Registry port is not an image tag",
+        "template": "pod.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.containers.[0].image=registry.example:5000/team/app",
+            "spec.containers.[0].imagePullPolicy=Never"
+        ]
+    },
+    {
+        "name": "Configured floating tag pinned by digest is allowed",
+        "template": "pod.yaml",
+        "param_template": "migration-control-configuration.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.containers.[0].image=registry.example:5000/app:stable@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "spec.containers.[0].imagePullPolicy=Never"
         ]
     }
 ]

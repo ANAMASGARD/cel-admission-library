@@ -35,12 +35,20 @@ spec:
               ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : []) + (has(object.spec.jobTemplate.spec.template.spec.ephemeralContainers) ? object.spec.jobTemplate.spec.template.spec.ephemeralContainers : [])
               : []
       name: containers
+    - name: allowed
+      expression: >-
+        params == null ? [] : params.?settings.?imageRepositoryAllowList.orValue([]).map(entry,
+          entry.endsWith('/') ? entry.substring(0, entry.size() - 1) : entry)
+    - name: normalizedImages
+      expression: >-
+        variables.containers.map(c, [c.image.split('/')].map(parts,
+          parts.size() == 1 ? 'docker.io/library/' + c.image :
+          parts[0] in ['docker.io', 'index.docker.io']
+            ? 'docker.io/' + (parts.size() == 2 ? 'library/' : '') + c.image.substring(c.image.indexOf('/') + 1) :
+          parts[0] == 'localhost' || parts[0].matches('[.:]') ? c.image : 'docker.io/' + c.image)[0])
   validations:
-    - expression: >
-        variables.containers.all(container, params.settings.imageRepositoryAllowList.exists(registry,
-        (
-          (registry == 'docker.io' && (!container.image.contains('/') || (!container.image.split('/')[0].contains('.') && !container.image.split('/')[0].contains(':') && container.image.split('/')[0] != 'localhost'))) ||
-          (container.image.startsWith(registry + '/'))
-        )))
-      messageExpression: >
-        object.kind + '/' + object.metadata.name + ' has one or more containers using an image from a registry that is not in the allow list! (see more at https://kubescape.io/docs/controls/c-0078/)'
+    - expression: >-
+        variables.normalizedImages.all(image, variables.allowed.exists(prefix,
+          prefix != '' && (image.startsWith(prefix + '/') || image == prefix ||
+          image.startsWith(prefix + ':') || image.startsWith(prefix + '@'))))
+      message: Every image must come from a configured registry or repository.

@@ -178,5 +178,29 @@
             "spec.initContainers.[0].name=init",
             "spec.initContainers.[0].image=Quay.IO/x/y:1"
         ]
+    },
+    {
+        "name": "Public registry alone blocks a short Docker Hub repository",
+        "template": "pod.yaml",
+        "param_template": "public-registry-config.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.containers.[0].image=busybox:1"
+        ]
+    },
+    {
+        "name": "Public registry repository prefix excludes an unrelated image",
+        "template": "pod.yaml",
+        "param_template": "public-registry-config.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.containers.[0].image=busybox-extra:1"
+        ]
+    },
+    {
+        "name": "Empty registry lists admit Docker Hub images",
+        "template": "pod.yaml",
+        "param_template": "agent-config-missing-allowlists.yaml",
+        "expected": "pass"
     }
 ]

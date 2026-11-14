@@ -3,6 +3,7 @@ kind: ControlConfiguration
 metadata:
   name: placeholder
 settings:
+  floatingImageTags: []
   hardenedSandboxRuntimeClasses:
   - gvisor
   cpuLimitMax: 5

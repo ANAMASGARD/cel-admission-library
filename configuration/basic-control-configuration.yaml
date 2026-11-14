@@ -3,6 +3,7 @@ kind: ControlConfiguration
 metadata:
   name: basic-control-configuration
 settings:
+  floatingImageTags: []
   hardenedSandboxRuntimeClasses:
   - gvisor
   # Set this to eks, aks or gke to make C-0020 check that cloud's credential
@@ -10,8 +11,7 @@ settings:
   cloudProvider: ""
   cpuLimitMin: 0
   cpuRequestMin: 0
-  imageRepositoryAllowList:
-  - gcr.io
+  imageRepositoryAllowList: []
   insecureCapabilities:
   - SETPCAP
   - NET_ADMIN
@@ -50,11 +50,7 @@ settings:
   - 10
   memoryLimitMin: "0"
   memoryRequestMin: "0"
-  publicRegistries:
-  - docker.io
-  - gcr.io
-  - quay.io
-  - registry.hub.docker.com
+  publicRegistries: []
   recommendedLabels:
   - app
   - tier
@@ -107,11 +103,7 @@ settings:
   - workflow-controller-metrics
   - weave-scope-app
   - kubernetes-dashboard
-  untrustedRegistries:
-  - docker.io
-  - gcr.io
-  - quay.io
-  - registry.hub.docker.com
+  untrustedRegistries: []
   wlKnownNames:
   - coredns
   - kube-proxy

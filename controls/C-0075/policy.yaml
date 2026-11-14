@@ -32,15 +32,15 @@ spec:
               ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : []) + (has(object.spec.jobTemplate.spec.template.spec.ephemeralContainers) ? object.spec.jobTemplate.spec.template.spec.ephemeralContainers : [])
               : []
       name: containers
+  paramKind:
+    apiVersion: kubescape.io/v1
+    kind: ControlConfiguration
   validations:
-    - expression: >
-        variables.containers.all(container,
-        !(
-          container.image.findAll(":[\\w][\\w.-]{0,127}(\\/)?").all(substring, substring.endsWith("/")) ||
-          container.image.findAll(":[\\w][\\w.-]{0,127}(\\/)?").exists(substring, substring == ":latest" || substring.matches("^:[a-zA-Z]{1,127}$"))
-        ) ||
-        (
-          has(container.imagePullPolicy) && container.imagePullPolicy == 'Always'
-        ))
-      messageExpression: >
-        object.kind + '/' + object.metadata.name + ' has one or more containers with an image with latest tag and imagePullPolicy not set to Always! (see more at https://kubescape.io/docs/controls/c-0075/)'
+    - expression: >-
+        variables.containers.all(c,
+          !(c.?imagePullPolicy.orValue('') in ['Never', 'IfNotPresent']) ||
+          (c.image.matches(':[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}($|@)') &&
+           !c.image.matches(':latest($|@)') &&
+           (c.image.contains('@') || params == null ||
+            !params.?settings.?floatingImageTags.orValue([]).exists(tag, c.image.endsWith(':' + tag)))))
+      message: Use Always for an untagged image, latest, or a configured floating tag.

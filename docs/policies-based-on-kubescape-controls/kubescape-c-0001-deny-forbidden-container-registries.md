@@ -23,6 +23,8 @@ images can also lead to similar results.
 ## What does this policy do:
 This Policy checks if the image used by any container, init container, or ephemeral container (added with `kubectl debug`) is from the configured [untrustedRegistries](https://kubescape.io/docs/frameworks-and-controls/configuring-controls/#untrustedregistries). If it finds any such instance, the resource is
 denied from being deployed in the cluster.
+Both `publicRegistries` and `untrustedRegistries` contribute entries. The shipped configuration starts both lists empty. To retain the earlier shipped block list on upgrade, explicitly configure `docker.io`, `gcr.io`, `quay.io` and `registry.hub.docker.com`. Docker Hub shorthand such as `busybox` expands to `docker.io/library/busybox`. Admission matches registry or repository boundaries. Rego uses a raw prefix, which can include lookalike names.
+
 Registry names are compared case-insensitively, so `QUAY.IO/...` matches `quay.io`.
 
 ## A note on `kubectl debug`:

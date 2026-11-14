@@ -1,0 +1,8 @@
+apiVersion: kubescape.io/v1
+kind: ControlConfiguration
+metadata:
+  name: registry-prefix-test
+settings:
+  imageRepositoryAllowList:
+  - quay.io/kubescape/
+  - docker.io/library/nginx
