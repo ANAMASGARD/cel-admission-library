@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Ordinary subject",
+    "template": "role-binding.yaml",
+    "expected": "pass"
+  },
+  {
+    "name": "Default account",
+    "template": "role-binding.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "subjects=[{\"kind\": \"ServiceAccount\", \"name\": \"default\", \"namespace\": \"default\"}]"
+    ]
+  },
+  {
+    "name": "Cluster binding",
+    "template": "cluster-role-binding.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "subjects=[{\"kind\": \"ServiceAccount\", \"name\": \"default\", \"namespace\": \"default\"}]"
+    ]
+  },
+  {
+    "name": "Bootstrap binding",
+    "template": "cluster-role-binding.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "subjects=[{\"kind\": \"ServiceAccount\", \"name\": \"default\", \"namespace\": \"default\"}]",
+      "metadata.labels={\"admission-policy-test\":\"abc\",\"kubernetes.io/bootstrapping\":\"rbac-defaults\"}"
+    ]
+  }
+]

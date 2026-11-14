@@ -1,0 +1,28 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0239-default-service-account-role-bindings
+  labels:
+    controlId: C-0239
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0239/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - rbac.authorization.k8s.io
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - rolebindings
+      - clusterrolebindings
+  validations:
+  - expression: |-
+      (has(object.metadata.labels) && 'kubernetes.io/bootstrapping' in object.metadata.labels &&
+       object.metadata.labels['kubernetes.io/bootstrapping'] == 'rbac-defaults') ||
+      !has(object.subjects) || object.subjects.all(s, s.kind != 'ServiceAccount' || s.name != 'default')
+    message: Avoid binding the default ServiceAccount.

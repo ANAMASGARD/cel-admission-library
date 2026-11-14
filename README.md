@@ -122,6 +122,7 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0306](https://kubescape.io/docs/controls/c-0306/) | Images not pinned to digest | [kubescape-c-0306-images-pinned-to-digests](/docs/policies-based-on-kubescape-controls/kubescape-c-0306-images-pinned-to-digests.md) | imageDigestExemptRepositories |
 | [C-0090](https://kubescape.io/docs/controls/c-0090/) | CVE-2022-39328-grafana-auth-bypass | [kubescape-c-0090-grafana-cve-version](/docs/policies-based-on-kubescape-controls/kubescape-c-0090-grafana-cve-version.md) | not configurable |
 | [C-0091](https://kubescape.io/docs/controls/c-0091/) | CVE-2022-47633-kyverno-signature-bypass | [kubescape-c-0091-kyverno-cve-version](/docs/policies-based-on-kubescape-controls/kubescape-c-0091-kyverno-cve-version.md) | not configurable |
+| [C-0239](https://kubescape.io/docs/controls/c-0239/) | Prefer using dedicated AKS Service Accounts | [kubescape-c-0239-default-service-account-role-bindings](/docs/policies-based-on-kubescape-controls/kubescape-c-0239-default-service-account-role-bindings.md) | not configurable |
 
 ## Testing Policies
 
