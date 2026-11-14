@@ -19,7 +19,7 @@ Two things follow, and this policy checks both. Granting the `default` ServiceAc
 This policy is two independent checks under one control ID, each matching different kinds.
 
 On a RoleBinding or ClusterRoleBinding:
-* If any subject is a ServiceAccount named `default`, the binding is denied from being deployed in the cluster.
+* An explicit ServiceAccount named `default` or its User spelling `system:serviceaccount:<namespace>:default` triggers a finding.
 * Unless the binding carries the label `kubernetes.io/bootstrapping: rbac-defaults`, which is how Kubernetes marks its own built-in bindings. Several of those bind the `default` ServiceAccount on purpose, so without this exemption the policy would fire on the cluster's own RBAC in every namespace.
 
 On a ServiceAccount:
@@ -33,3 +33,40 @@ Give each workload its own ServiceAccount, bind permissions to that, and set `au
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+
+### Namespace bootstrap and binding scope
+
+A default ServiceAccount created by the namespace controller has no explicit token setting. A Deny binding covering all ServiceAccounts can prevent that account from being provisioned. The example below applies Deny to RBAC bindings and Warn to ServiceAccounts. Remove any broader Deny binding for this policy when switching to the split configuration. Set `automountServiceAccountToken: false` on each default account after provisioning.
+
+```yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: c-0225-rbac
+spec:
+  policyName: kubescape-c-0225-deny-default-service-account-rbac-and-automount
+  validationActions: [Deny]
+  matchResources:
+    resourceRules:
+    - apiGroups: ["rbac.authorization.k8s.io"]
+      apiVersions: ["v1"]
+      operations: [CREATE, UPDATE]
+      resources: [rolebindings, clusterrolebindings]
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: c-0225-serviceaccounts
+spec:
+  policyName: kubescape-c-0225-deny-default-service-account-rbac-and-automount
+  validationActions: [Warn, Audit]
+  matchResources:
+    resourceRules:
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      operations: [CREATE, UPDATE]
+      resources: [serviceaccounts]
+```
+
+Both the source and the admission policy trust the binding's bootstrap label. Its presence does not authenticate the creator. They also allow Group subjects, including `system:serviceaccounts` and `system:serviceaccounts:<namespace>`, which grant access to the default account indirectly. These cases remain tracked upstream. [C-0225 follow-up](https://github.com/kubescape/cel-admission-library/issues/168)

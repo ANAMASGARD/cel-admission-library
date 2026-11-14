@@ -34,3 +34,5 @@ If you bind this policy, think carefully before using `validationActions: [Deny]
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+This admission policy checks the CSI driver name and a nonempty secret class. The Rego rule also accepts attribute presence in cases that this policy rejects.

@@ -130,5 +130,21 @@
             "rules.[0].apiGroups=[\"example.com\"]",
             "rules.[0].verbs=[\"update\"]"
         ]
+    },
+    {
+        "name": "ClusterRole granting every verb on CSR approval is denied",
+        "template": "cluster-role-csr-approval.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "rules.[0].verbs=[\"*\"]"
+        ]
+    },
+    {
+        "name": "An exact approval resource in another API group grants no CSR approval rights",
+        "template": "cluster-role-csr-approval.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "rules.[0].apiGroups=[\"example.com\"]"
+        ]
     }
 ]

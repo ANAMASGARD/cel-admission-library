@@ -20,3 +20,5 @@ This Policy checks if `automountServiceAccountToken` is set and is set to `false
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+The Rego scanner can resolve the referenced ServiceAccount. Admission evaluates explicit workload or account settings separately and cannot derive the same inherited value from arbitrary ServiceAccounts.

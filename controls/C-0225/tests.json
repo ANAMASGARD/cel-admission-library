@@ -145,5 +145,31 @@
         "field_change_list": [
             "subjects=[{\"kind\": \"User\", \"name\": \"system:serviceaccount:test-namespace:my-app\", \"apiGroup\": \"rbac.authorization.k8s.io\"}]"
         ]
+    },
+    {
+        "name": "ServiceAccounts group remains outside the explicit-subject check",
+        "template": "cluster-role-binding.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "subjects=[{\"kind\":\"Group\",\"name\":\"system:serviceaccounts\",\"apiGroup\":\"rbac.authorization.k8s.io\"}]"
+        ]
+    },
+    {
+        "name": "Namespace ServiceAccounts group remains outside the explicit-subject check",
+        "template": "role-binding.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "subjects=[{\"kind\":\"Group\",\"name\":\"system:serviceaccounts:test-namespace\",\"apiGroup\":\"rbac.authorization.k8s.io\"}]"
+        ]
+    },
+    {
+        "name": "Warning binding allows provisioning a default ServiceAccount with an unset token flag",
+        "template": "service-account.yaml",
+        "binding_template": "policy-binding-warn.yaml",
+        "expected": "warn",
+        "field_change_list": [
+            "metadata.name=default",
+            "metadata.namespace=test-namespace"
+        ]
     }
 ]
