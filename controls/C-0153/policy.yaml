@@ -1,0 +1,37 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0153-cert-file
+  labels:
+    controlId: C-0153
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0153/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: |-
+      object.spec.containers.size() == 1 && has(object.spec.containers[0].command) &&
+      object.spec.containers[0].command.size() > 0 &&
+      object.spec.containers[0].command[0].split(' ')[0].endsWith('etcd')
+  variables:
+  - name: flags
+    expression: |-
+      object.spec.containers[0].command +
+      (has(object.spec.containers[0].args) ? object.spec.containers[0].args : [])
+  validations:
+  - expression: |-
+      variables.flags.exists(a, a.contains('--cert-file')) &&
+      variables.flags.exists(a, a.contains('--key-file'))
+    message: Ensure that the --cert-file and --key-file arguments are set as appropriate.

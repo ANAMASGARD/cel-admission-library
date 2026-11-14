@@ -1,0 +1,37 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0154-client-cert-auth
+  labels:
+    controlId: C-0154
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0154/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: |-
+      object.spec.containers.size() == 1 && has(object.spec.containers[0].command) &&
+      object.spec.containers[0].command.size() > 0 &&
+      object.spec.containers[0].command[0].split(' ')[0].endsWith('etcd')
+  variables:
+  - name: flags
+    expression: |-
+      object.spec.containers[0].command +
+      (has(object.spec.containers[0].args) ? object.spec.containers[0].args : [])
+  validations:
+  - expression: |-
+      variables.flags.exists(a, a.contains('--client-cert-auth')) &&
+      variables.flags.all(a, !a.contains('--client-cert-auth=false'))
+    message: Ensure that the --client-cert-auth argument is set to true.

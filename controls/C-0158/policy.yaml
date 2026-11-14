@@ -1,0 +1,35 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0158-peer-auto-tls
+  labels:
+    controlId: C-0158
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0158/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: |-
+      object.spec.containers.size() == 1 && has(object.spec.containers[0].command) &&
+      object.spec.containers[0].command.size() > 0 &&
+      object.spec.containers[0].command[0].split(' ')[0].endsWith('etcd')
+  variables:
+  - name: flags
+    expression: |-
+      object.spec.containers[0].command +
+      (has(object.spec.containers[0].args) ? object.spec.containers[0].args : [])
+  validations:
+  - expression: variables.flags.all(a, !a.contains('--peer-auto-tls=true'))
+    message: Ensure that the --peer-auto-tls argument is not set to true.

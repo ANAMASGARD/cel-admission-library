@@ -179,6 +179,12 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0150](https://kubescape.io/docs/controls/c-0150/) | Ensure that the Controller Manager --bind-address argument is set to 127.0.0.1 | [kubescape-c-0150-bind-address](/docs/policies-based-on-kubescape-controls/kubescape-c-0150-bind-address.md) | not configurable |
 | [C-0151](https://kubescape.io/docs/controls/c-0151/) | Ensure that the Scheduler --profiling argument is set to false | [kubescape-c-0151-profiling](/docs/policies-based-on-kubescape-controls/kubescape-c-0151-profiling.md) | not configurable |
 | [C-0152](https://kubescape.io/docs/controls/c-0152/) | Ensure that the Scheduler --bind-address argument is set to 127.0.0.1 | [kubescape-c-0152-bind-address](/docs/policies-based-on-kubescape-controls/kubescape-c-0152-bind-address.md) | not configurable |
+| [C-0153](https://kubescape.io/docs/controls/c-0153/) | Ensure that the --cert-file and --key-file arguments are set as appropriate | [kubescape-c-0153-cert-file](/docs/policies-based-on-kubescape-controls/kubescape-c-0153-cert-file.md) | not configurable |
+| [C-0154](https://kubescape.io/docs/controls/c-0154/) | Ensure that the --client-cert-auth argument is set to true | [kubescape-c-0154-client-cert-auth](/docs/policies-based-on-kubescape-controls/kubescape-c-0154-client-cert-auth.md) | not configurable |
+| [C-0155](https://kubescape.io/docs/controls/c-0155/) | Ensure that the --auto-tls argument is not set to true | [kubescape-c-0155-auto-tls](/docs/policies-based-on-kubescape-controls/kubescape-c-0155-auto-tls.md) | not configurable |
+| [C-0156](https://kubescape.io/docs/controls/c-0156/) | Ensure that the --peer-cert-file and --peer-key-file arguments are set as appropriate | [kubescape-c-0156-peer-cert-file](/docs/policies-based-on-kubescape-controls/kubescape-c-0156-peer-cert-file.md) | not configurable |
+| [C-0157](https://kubescape.io/docs/controls/c-0157/) | Ensure that the --peer-client-cert-auth argument is set to true | [kubescape-c-0157-peer-client-cert-auth](/docs/policies-based-on-kubescape-controls/kubescape-c-0157-peer-client-cert-auth.md) | not configurable |
+| [C-0158](https://kubescape.io/docs/controls/c-0158/) | Ensure that the --peer-auto-tls argument is not set to true | [kubescape-c-0158-peer-auto-tls](/docs/policies-based-on-kubescape-controls/kubescape-c-0158-peer-auto-tls.md) | not configurable |
 
 ## Testing Policies
 
