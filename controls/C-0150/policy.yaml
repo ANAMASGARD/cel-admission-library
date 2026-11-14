@@ -1,0 +1,42 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0150-bind-address
+  labels:
+    controlId: C-0150
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0150/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: |-
+      has(object.metadata.namespace) && object.metadata.namespace == 'kube-system' &&
+      object.spec.containers.size() == 1 && has(object.spec.containers[0].command) &&
+      object.spec.containers[0].command.size() > 0 &&
+      object.spec.containers[0].command[0].endsWith('kube-controller-manager')
+  variables:
+  - name: flags
+    expression: |-
+      object.spec.containers[0].command +
+      (has(object.spec.containers[0].args) ? object.spec.containers[0].args : [])
+  - name: values
+    expression: |-
+      variables.flags.filter(a, a.findAll('--bind-address=[^ ]+').size() == 1)
+        .map(a, a.find('--bind-address=[^ ]+').substring(15))
+  validations:
+  - expression: |-
+      variables.flags.exists(a, a.contains('--bind-address')) &&
+      variables.values.all(v, v == '127.0.0.1')
+    message: Ensure that the Controller Manager --bind-address argument is set to 127.0.0.1.
