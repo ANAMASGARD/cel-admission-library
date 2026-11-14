@@ -23,43 +23,32 @@ spec:
       operations:  ["CREATE", "UPDATE"]
       resources:   ["jobs","cronjobs"]
   variables:
-    - expression: |
-        object.kind == 'Pod'
-          ? object.spec.containers + (has(object.spec.initContainers) ? object.spec.initContainers : []) + (has(object.spec.ephemeralContainers) ? object.spec.ephemeralContainers : [])
-          : object.kind in ['Deployment','ReplicaSet','DaemonSet','StatefulSet','Job']
-            ? object.spec.template.spec.containers + (has(object.spec.template.spec.initContainers) ? object.spec.template.spec.initContainers : []) + (has(object.spec.template.spec.ephemeralContainers) ? object.spec.template.spec.ephemeralContainers : [])
-            : object.kind == 'CronJob'
-              ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : []) + (has(object.spec.jobTemplate.spec.template.spec.ephemeralContainers) ? object.spec.jobTemplate.spec.template.spec.ephemeralContainers : [])
-              : []
-      name: containers
-  # AppArmor counts only when it enforces a profile: the appArmorProfile field with a type other
-  # than Unconfined (RuntimeDefault or Localhost), or the legacy annotation with a value other
-  # than unconfined (runtime/default or localhost/<profile>). Unconfined disables AppArmor.
+    - name: podSpec
+      expression: >-
+        object.kind == 'Pod' ? object.spec : object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec : object.spec.template.spec
+    - name: windows
+      expression: variables.podSpec.?os.?name.orValue('') == 'windows'
+    - name: containers
+      expression: >-
+        variables.podSpec.containers + variables.podSpec.?initContainers.orValue([]) +
+        variables.podSpec.?ephemeralContainers.orValue([])
+    - name: podContext
+      expression: variables.podSpec.?securityContext.orValue({})
+    - name: annotations
+      expression: >-
+        object.kind == 'Pod' ? object.metadata.?annotations.orValue({}) :
+        object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.?metadata.?annotations.orValue({}) :
+        object.spec.template.?metadata.?annotations.orValue({})
   validations:
-    - expression: >
-        object.kind != 'Pod' ||
-        (has(object.metadata.annotations) && object.metadata.annotations.exists(annotation, annotation.startsWith("container.apparmor.security.beta.kubernetes.io/") && object.metadata.annotations[annotation] != "unconfined")) ||
-        (has(object.spec.securityContext) && (has(object.spec.securityContext.seccompProfile) || has(object.spec.securityContext.seLinuxOptions) || (has(object.spec.securityContext.appArmorProfile) && object.spec.securityContext.appArmorProfile.type != 'Unconfined'))) ||
-        variables.containers.all(container, has(container.securityContext) && (has(container.securityContext.seccompProfile) ||
-        has(container.securityContext.seLinuxOptions) ||
-        (has(container.securityContext.appArmorProfile) && container.securityContext.appArmorProfile.type != 'Unconfined') ||
-        (has(container.securityContext.capabilities) && has(container.securityContext.capabilities.drop))))
-      message: "Pods could have more security hardening! (see more at https://kubescape.io/docs/controls/c-0055/)"
-    - expression: >
-        ['Deployment','ReplicaSet','DaemonSet','StatefulSet','Job'].all(kind, object.kind != kind) ||
-        (has(object.spec.template.metadata) && has(object.spec.template.metadata.annotations) && object.spec.template.metadata.annotations.exists(annotation, annotation.startsWith("container.apparmor.security.beta.kubernetes.io/") && object.spec.template.metadata.annotations[annotation] != "unconfined")) ||
-        (has(object.spec.template.spec.securityContext) && (has(object.spec.template.spec.securityContext.seccompProfile) || has(object.spec.template.spec.securityContext.seLinuxOptions) || (has(object.spec.template.spec.securityContext.appArmorProfile) && object.spec.template.spec.securityContext.appArmorProfile.type != 'Unconfined'))) ||
-        variables.containers.all(container, has(container.securityContext) && (has(container.securityContext.seccompProfile) ||
-        has(container.securityContext.seLinuxOptions) ||
-        (has(container.securityContext.appArmorProfile) && container.securityContext.appArmorProfile.type != 'Unconfined') ||
-        (has(container.securityContext.capabilities) && has(container.securityContext.capabilities.drop))))
-      message: "Workloads could have more security hardening! (see more at https://kubescape.io/docs/controls/c-0055/)"
-    - expression: >
-        object.kind != 'CronJob' ||
-        (has(object.spec.jobTemplate.spec.template.metadata) && has(object.spec.jobTemplate.spec.template.metadata.annotations) && object.spec.jobTemplate.spec.template.metadata.annotations.exists(annotation, annotation.startsWith("container.apparmor.security.beta.kubernetes.io/") && object.spec.jobTemplate.spec.template.metadata.annotations[annotation] != "unconfined")) ||
-        (has(object.spec.jobTemplate.spec.template.spec.securityContext) && (has(object.spec.jobTemplate.spec.template.spec.securityContext.seccompProfile) || has(object.spec.jobTemplate.spec.template.spec.securityContext.seLinuxOptions) || (has(object.spec.jobTemplate.spec.template.spec.securityContext.appArmorProfile) && object.spec.jobTemplate.spec.template.spec.securityContext.appArmorProfile.type != 'Unconfined'))) ||
-        variables.containers.all(container, has(container.securityContext) && (has(container.securityContext.seccompProfile) ||
-        has(container.securityContext.seLinuxOptions) ||
-        (has(container.securityContext.appArmorProfile) && container.securityContext.appArmorProfile.type != 'Unconfined') ||
-        (has(container.securityContext.capabilities) && has(container.securityContext.capabilities.drop))))
-      message: "CronJob could have more security hardening! (see more at https://kubescape.io/docs/controls/c-0055/)"
+    - expression: >-
+        variables.windows || variables.containers.all(c,
+          c.?securityContext.?appArmorProfile.?type.orValue(
+            variables.annotations[?('container.apparmor.security.beta.kubernetes.io/' + c.name)].orValue(
+              variables.podContext.?appArmorProfile.?type.orValue('Unconfined')
+            )
+          ).lowerAscii() != 'unconfined' ||
+          c.?securityContext.?seccompProfile.?type.orValue(
+            variables.podContext.?seccompProfile.?type.orValue('Unconfined')) != 'Unconfined' ||
+          c.?securityContext.?seLinuxOptions.or(variables.podContext.?seLinuxOptions).hasValue() ||
+          has(c.securityContext) && has(c.securityContext.capabilities) && has(c.securityContext.capabilities.drop) && c.securityContext.capabilities.drop.size() > 0)
+      message: Configure an effective Linux hardening profile for each container.

@@ -1,0 +1,16 @@
+[
+  {
+    "alertObject": {
+      "k8sApiObjects": [
+        {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "metadata": {
+            "name": "field-only-apparmor",
+            "namespace": "default"
+          }
+        }
+      ]
+    }
+  }
+]

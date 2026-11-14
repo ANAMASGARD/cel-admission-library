@@ -3,15 +3,13 @@
         "name": "Pod without apparmor annotations or seccompProfile or seLinuxOptions in PodSecurityContext or atleast one container not having seccompProfile, seLinuxOptions or capabilities.drop is denied",
         "template": "pod.yaml",
         "expected": "fail",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Pod with metadata.annotations having \"container.apparmor.security.beta.kubernetes.io/sleep\" key is allowed",
         "template": "pod-for-list-items.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Pod with PodSecurityContext having seccompProfile allowed",
@@ -49,22 +47,19 @@
         "name": "Pod with every container securityContext having capabilities.drop is allowed",
         "template": "pod-for-list-items.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Deployment without apparmor annotations or seccompProfile or seLinuxOptions in PodSecurityContext or atleast one container not having seccompProfile, seLinuxOptions or capabilities.drop is denied",
         "template": "deployment.yaml",
         "expected": "fail",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Deployment with metadata.annotations having \"container.apparmor.security.beta.kubernetes.io/sleep\" key is allowed",
         "template": "deployment-for-list-items.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Deployment with PodSecurityContext having seccompProfile allowed",
@@ -102,8 +97,7 @@
         "name": "Deployment with every container securityContext having capabilities.drop is allowed",
         "template": "deployment-for-list-items.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Pod without pod-level hardening and initContainer without seccompProfile, seLinuxOptions or capabilities.drop is denied",
@@ -200,8 +194,7 @@
         "name": "CronJob without any hardening is denied",
         "template": "cronjob.yaml",
         "expected": "fail",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "CronJob with PodSecurityContext having appArmorProfile is allowed",
@@ -298,6 +291,86 @@
         "expected": "fail",
         "field_change_list": [
             "spec.jobTemplate.spec.template.metadata.annotations={\"container.apparmor.security.beta.kubernetes.io.fake/x\": \"runtime/default\"}"
+        ]
+    },
+    {
+        "name": "Windows workload",
+        "template": "deployment.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.template.spec.os.name=windows"
+        ]
+    },
+    {
+        "name": "pod container disables inherited appArmorProfile",
+        "template": "pod.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.securityContext.appArmorProfile.type=RuntimeDefault",
+            "spec.containers.[0].securityContext.appArmorProfile.type=Unconfined"
+        ]
+    },
+    {
+        "name": "pod container disables inherited seccompProfile",
+        "template": "pod.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.securityContext.seccompProfile.type=RuntimeDefault",
+            "spec.containers.[0].securityContext.seccompProfile.type=Unconfined"
+        ]
+    },
+    {
+        "name": "deployment container disables inherited appArmorProfile",
+        "template": "deployment.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.template.spec.securityContext.appArmorProfile.type=RuntimeDefault",
+            "spec.template.spec.containers.[0].securityContext.appArmorProfile.type=Unconfined"
+        ]
+    },
+    {
+        "name": "deployment container disables inherited seccompProfile",
+        "template": "deployment.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.template.spec.securityContext.seccompProfile.type=RuntimeDefault",
+            "spec.template.spec.containers.[0].securityContext.seccompProfile.type=Unconfined"
+        ]
+    },
+    {
+        "name": "cronjob container disables inherited appArmorProfile",
+        "template": "cronjob.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.securityContext.appArmorProfile.type=RuntimeDefault",
+            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext.appArmorProfile.type=Unconfined"
+        ]
+    },
+    {
+        "name": "cronjob container disables inherited seccompProfile",
+        "template": "cronjob.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.securityContext.seccompProfile.type=RuntimeDefault",
+            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext.seccompProfile.type=Unconfined"
+        ]
+    },
+    {
+        "name": "An annotation for a different container leaves this container unconfined",
+        "template": "deployment.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.template.metadata.annotations={\"container.apparmor.security.beta.kubernetes.io/sidecar\":\"runtime/default\"}",
+            "spec.template.spec.containers.[1].name=sidecar",
+            "spec.template.spec.containers.[1].image=busybox"
+        ]
+    },
+    {
+        "name": "Empty capabilities drop list hardens nothing",
+        "template": "deployment.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.template.spec.containers.[0].securityContext.capabilities.drop=[]"
         ]
     }
 ]

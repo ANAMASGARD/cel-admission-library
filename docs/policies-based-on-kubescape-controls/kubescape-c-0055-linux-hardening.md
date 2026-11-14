@@ -23,3 +23,7 @@ This Policy checks if there is `AppArmor` or `Seccomp` or `SELinux` or `Capabili
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+Each container inherits its pod's settings unless it has an override. For AppArmor the kubelet checks the container field, then that container's legacy annotation, then the pod field. A container that overrides an enforcing pod profile with `Unconfined` needs another hardening measure. Dropping at least one capability or supplying SELinux options also satisfies the policy. Windows workloads are exempt. [Kubelet AppArmor selection](https://github.com/kubernetes/kubernetes/blob/v1.35.1/pkg/security/apparmor/helpers.go#L54-L73)
+
+The pinned Rego rule checks seccomp field presence on regular and init containers. It reports an AppArmor-only workload and accepts an explicit unconfined seccomp profile. The admission policy retains the library's broader hardening alternatives and checks ephemeral containers too. [Rego source](https://github.com/kubescape/regolibrary/blob/b7e57060ca90c41fe15359383245a7c62f09487c/rules/linux-hardening/raw.rego)

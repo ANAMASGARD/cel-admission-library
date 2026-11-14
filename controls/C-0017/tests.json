@@ -97,5 +97,13 @@
             "spec.jobTemplate.spec.template.spec.initContainers.[0].image=alpine",
             "spec.jobTemplate.spec.template.spec.initContainers.[0].securityContext.readOnlyRootFilesystem=true"
         ]
+    },
+    {
+        "name": "Windows workload",
+        "template": "deployment.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.template.spec.os.name=windows"
+        ]
     }
 ]

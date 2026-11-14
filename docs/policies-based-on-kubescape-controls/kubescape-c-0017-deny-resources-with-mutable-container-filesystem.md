@@ -44,3 +44,5 @@ This policy checks every container in the Pod, not only the new debug container.
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+Windows workloads are exempt from Linux-only security settings.
