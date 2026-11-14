@@ -27,3 +27,5 @@ If any of the above check fails, the resource is denied from being deployed in t
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+Rego joins workload labels to Service selectors. Admission evaluates each workload or Service separately, so different objects can receive different findings.

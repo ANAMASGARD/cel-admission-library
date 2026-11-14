@@ -27,3 +27,5 @@ Ephemeral containers (added with `kubectl debug`) are not checked, because the K
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+Explicit hostPort 0 means no host port at admission. The pinned Rego fixture considers field presence a finding even at zero.
