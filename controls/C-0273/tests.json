@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Current status",
+    "template": "node.yaml",
+    "expected": "pass",
+    "subresource": "status",
+    "binding_template": "policy-binding-warn.yaml",
+    "field_change_list": [
+      "status.nodeInfo.kubeletVersion=v1.37.1"
+    ]
+  },
+  {
+    "name": "Status needs review",
+    "template": "node.yaml",
+    "expected": "warn",
+    "subresource": "status",
+    "binding_template": "policy-binding-warn.yaml",
+    "field_change_list": [
+      "status.nodeInfo.kubeletVersion=v1.34.9"
+    ]
+  }
+]

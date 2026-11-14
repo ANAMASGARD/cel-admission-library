@@ -1,0 +1,33 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0087-review-containerruntimeversion
+  labels:
+    controlId: C-0087
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0087/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - nodes
+      - nodes/status
+  validations:
+  - expression: |-
+      !has(object.status) || !has(object.status.nodeInfo) || !has(object.status.nodeInfo.containerRuntimeVersion) || !object.status.nodeInfo.containerRuntimeVersion.startsWith('containerd://') ||
+        [object.status.nodeInfo.containerRuntimeVersion.substring(13).split('.')].all(v,
+          v.size() < 3 || ![v[0], v[1], v[2]].all(p, p.matches('^[0-9]+$')) ||
+          !((v[0].matches('^0+$')) ||
+            (v[0].matches('^0*1$') && (v[1].matches('^0*[0-3]$') ||
+              (v[1].matches('^0*4$') && v[2].matches('^0*([0-9]|1[01])$')) ||
+              (v[1].matches('^0*5$') && v[2].matches('^0*[0-9]$')) ||
+              (v[1].matches('^0*6$') && v[2].matches('^0+$'))))))
+    message: Review Node containerRuntimeVersion against the control requirements.

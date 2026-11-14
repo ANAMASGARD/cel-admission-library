@@ -1,0 +1,26 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0273-review-kubeletversion
+  labels:
+    controlId: C-0273
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0273/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - nodes
+      - nodes/status
+  validations:
+  - expression: '!has(object.status) || !has(object.status.nodeInfo) || !has(object.status.nodeInfo.kubeletVersion)
+      || [''v1.35'',''v1.36'',''v1.37''].exists(v, object.status.nodeInfo.kubeletVersion.startsWith(v))'
+    message: Review Node kubeletVersion against the control requirements.

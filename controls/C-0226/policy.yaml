@@ -1,0 +1,26 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0226-review-osimage
+  labels:
+    controlId: C-0226
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0226/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - nodes
+      - nodes/status
+  validations:
+  - expression: '!has(object.status) || !has(object.status.nodeInfo) || !has(object.status.nodeInfo.osImage) ||
+      object.status.nodeInfo.osImage.startsWith(''Bottlerocket'')'
+    message: Review Node osImage against the control requirements.

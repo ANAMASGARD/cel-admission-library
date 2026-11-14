@@ -133,6 +133,9 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0039](https://kubescape.io/docs/controls/c-0039/) | Validate admission controller (mutating) | [kubescape-c-0039-review-mutatingwebhookconfigurations](/docs/policies-based-on-kubescape-controls/kubescape-c-0039-review-mutatingwebhookconfigurations.md) | not configurable |
 | [C-0209](https://kubescape.io/docs/controls/c-0209/) | Create administrative boundaries between resources using namespaces | [kubescape-c-0209-review-namespaces](/docs/policies-based-on-kubescape-controls/kubescape-c-0209-review-namespaces.md) | not configurable |
 | [C-0232](https://kubescape.io/docs/controls/c-0232/) | Manage Kubernetes RBAC users with AWS IAM Authenticator for Kubernetes or Upgrade to AWS CLI v1.16.156 | [kubescape-c-0232-review-roles](/docs/policies-based-on-kubescape-controls/kubescape-c-0232-review-roles.md) | not configurable |
+| [C-0087](https://kubescape.io/docs/controls/c-0087/) | CVE-2022-23648-containerd-fs-escape | [kubescape-c-0087-review-containerruntimeversion](/docs/policies-based-on-kubescape-controls/kubescape-c-0087-review-containerruntimeversion.md) | not configurable |
+| [C-0226](https://kubescape.io/docs/controls/c-0226/) | Prefer using a container-optimized OS when possible | [kubescape-c-0226-review-osimage](/docs/policies-based-on-kubescape-controls/kubescape-c-0226-review-osimage.md) | not configurable |
+| [C-0273](https://kubescape.io/docs/controls/c-0273/) | Outdated Kubernetes version | [kubescape-c-0273-review-kubeletversion](/docs/policies-based-on-kubescape-controls/kubescape-c-0273-review-kubeletversion.md) | not configurable |
 
 ## Testing Policies
 
