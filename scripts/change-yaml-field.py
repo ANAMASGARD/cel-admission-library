@@ -107,9 +107,9 @@ def main():
 
     # Get the field name and value from the command line
     for arg in args.fields:
-        if arg.count('=') != 1:
+        if '=' not in arg:
             raise ValueError('Invalid argument: missing \'=\' in ' + arg)
-        field, value = arg.split('=')
+        field, value = arg.split('=', 1)
         apply_field(data, field, value)
 
     # Write the YAML file to stdout

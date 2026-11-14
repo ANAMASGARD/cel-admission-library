@@ -1,175 +1,128 @@
-import json, yaml
+"""Exercise one control on a disposable Kubernetes cluster with server dry-runs."""
+import argparse
+from contextlib import ExitStack
+import json
+from pathlib import Path
 import subprocess
-import os
 import sys
-import time
 import tempfile
-from termcolor import colored
+import time
+
+import yaml
 
 
-SCRIPTS_DIR = os.path.join('..', '..', 'scripts')
-TEST_RESOURCES_DIR = os.path.join('..', '..', 'test-resources')
-CONFIGURATION_DIR = os.path.join('..', '..', 'configuration')
-
-DONT_CLEANUP = False
-if len(sys.argv) > 1:
-    if '--dont-cleanup' in sys.argv or '-d' in sys.argv:
-        DONT_CLEANUP = True
-
-# Get the name of the python executable
-python_executable = 'python3'
-try:
-    subprocess.check_call([python_executable, '--version'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-except:
-    python_executable = 'python'
+ROOT = Path(__file__).resolve().parents[1]
+FIXTURES = ROOT / "test-resources"
 
 
-# check access to scripts folder
-if not os.path.exists(SCRIPTS_DIR):
-    raise Exception('Scripts folder not found')
-# check access to test-resources folder
-if not os.path.exists(TEST_RESOURCES_DIR):
-    raise Exception('Test resources folder not found')
-
-# Open tests.json file and read it into a variable
-with open('tests.json', 'r') as f:
-    tests = json.load(f)
-
-# Create a test namespace
-subprocess.check_call(['kubectl', 'create', 'namespace','test-namespace'])
-
-try:
-    # Apply the configuraton CRD
-    subprocess.check_call(['kubectl', 'apply', '-f', os.path.join(CONFIGURATION_DIR, 'policy-configuration-definition.yaml')])
-
-    # Open policy yaml
-    with open(os.path.join('policy.yaml'), 'r') as f:
-        policy = yaml.load(f, Loader=yaml.FullLoader)
-
-    # Test result variable
-    all_tests_passed = True
-
-    # Loop through the tests
-    for test in tests:
-        name = test['name']
-        template = test['template']
-        field_change_list = test['field_change_list'] if 'field_change_list' in test else []
-        expected = test['expected']
-        binding_template = test['binding_template'] if 'binding_template' in test else 'policy-binding.yaml'
-        param_template = test['param_template'] if 'param_template' in test else 'default-control-configuration.yaml'
-
-        print('-'*120)
-        print('Running test: ' + name)
-
-        # Generate temporary file name for the output file with tempfile
-        with tempfile.NamedTemporaryFile() as temp_file:
-            test_object_yaml = temp_file.name
-
-        # Run the change yaml field script
-        if len(field_change_list) > 0:
-            print('Changing fields: ' + str(field_change_list))
-            subprocess.check_call([python_executable, os.path.join(SCRIPTS_DIR, 'change-yaml-field.py'), '-i', os.path.join(TEST_RESOURCES_DIR, template), '-o', test_object_yaml] + field_change_list)
-        else:
-            subprocess.check_call(['cp', os.path.join(TEST_RESOURCES_DIR, template), test_object_yaml])
-        print('Generated test object: ' + test_object_yaml)
-
-        # Generate temporary file name for the binding file with tempfile
-        with tempfile.NamedTemporaryFile() as temp_file:
-            policy_bind_temp_file_name = temp_file.name
-        # Create the policy binding file
-        policy_name = policy['metadata']['name']
-        policy_bind_change_list = ['spec.policyName=' + policy_name, 'metadata.name=' + policy_name + '-binding']
-        if not test.get('omit_param_ref', False):
-            policy_bind_change_list.append('spec.paramRef.name=' + policy_name + '-params')
-        subprocess.check_call([python_executable, os.path.join(SCRIPTS_DIR, 'change-yaml-field.py'), '-i', os.path.join(TEST_RESOURCES_DIR, binding_template), '-o', policy_bind_temp_file_name] + policy_bind_change_list)
-        print('Generated policy binding: ' + policy_bind_temp_file_name)
-
-        # Create parameter file
-        with tempfile.NamedTemporaryFile() as temp_file:
-            param_file_name = temp_file.name
-        param_file_change_list = ['metadata.name=' + policy_name + '-params']
-        subprocess.check_call([python_executable, os.path.join(SCRIPTS_DIR, 'change-yaml-field.py'), '-i', os.path.join(TEST_RESOURCES_DIR, param_template), '-o', param_file_name] + param_file_change_list)
-        print('Generated parameter file: ' + param_file_name)
+def kubectl(*args, **kwargs):
+    return subprocess.run(["kubectl", *args], check=True, text=True, **kwargs)
 
 
-        # Run kubectl apply on the policy and policy binding
-        subprocess.check_call(['kubectl', 'apply', '-f', param_file_name])
-        subprocess.check_call(['kubectl', 'apply', '-f', policy_bind_temp_file_name])
-        subprocess.check_call(['kubectl', 'apply', '-f', 'policy.yaml'])
+def create_owned(stack, manifest):
+    # create fails on collision. Only register cleanup after we created the object.
+    kubectl("create", "-f", str(manifest))
+    stack.callback(kubectl, "delete", "--ignore-not-found", "-f", str(manifest))
 
-        time.sleep(1)
 
-        # Run kubectl apply on the test object and capture output
-        proc = subprocess.run(
-            ['kubectl', '--dry-run=server', 'apply', '-f', test_object_yaml],
-            capture_output=True, text=True
+def render(template, dest, changes):
+    if changes:
+        subprocess.run(
+            [sys.executable, str(ROOT / "scripts/change-yaml-field.py"),
+             "-i", str(template), "-o", str(dest), *changes], check=True,
         )
-        result = proc.returncode
-
-        test_passed = False
-        valid_expected = {'pass', 'fail', 'warn'}
-        if expected not in valid_expected:
-            print(colored('Test failed: unsupported expected value "' + str(expected) + '"','red'))
-        elif expected == 'pass' and result != 0:
-            print(colored('Test failed: expected to pass but failed','red'))
-            print(proc.stderr)
-        elif expected == 'fail' and result == 0:
-            print(colored('Test failed: expected to fail but passed','red'))
-        elif expected == 'fail' and result != 0 and policy_name not in proc.stderr:
-            print(colored('Test failed: expected VAP denial from "' + policy_name + '" but got different error','red'))
-            print(proc.stderr)
-        elif expected == 'warn' and result != 0:
-            print(colored('Test failed: expected to pass with a warning but failed','red'))
-            print(proc.stderr)
-        elif expected == 'warn' and result == 0 and policy_name not in proc.stderr:
-            print(colored('Test failed: expected VAP warning from "' + policy_name + '" but none was emitted','red'))
-            print(proc.stderr)
-        else:
-            test_passed = True
-            print(colored('Test passed!','green'))
-
-        print(colored('Cleaning up...', 'yellow'))
-        # Run kubectl delete on the policy and policy binding.
-        try:
-            subprocess.check_call(['kubectl', 'delete', '-f', 'policy.yaml'],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.check_call(['kubectl', 'delete', '-f', policy_bind_temp_file_name],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.check_call(['kubectl', 'delete', '-f', test_object_yaml],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.check_call(['kubectl', 'delete', '-f', param_file_name],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except:
-            pass
-
-        # Call kubectl wait --for=delete pod -l app=test-pod  --timeout=360s
-        subprocess.check_call(['kubectl', 'wait', '--for=delete', 'pod', '-l', 'app=test-pod', '--timeout=360s'])
-
-        if not test_passed:
-            if not DONT_CLEANUP:
-                os.remove(policy_bind_temp_file_name)
-                os.remove(test_object_yaml)
-                os.remove(param_file_name)
-                print(colored('Done ', 'yellow'))
-            else:
-                print(colored('Done (left generated object in place)', 'yellow'))
-        else:
-            print(colored('Done', 'yellow'))
-
-        all_tests_passed = all_tests_passed and test_passed
-
-        print('-'*120)
-        print('')
-except Exception as e:
-    print(colored('Exception: ' + str(e),'red'))
-    all_tests_passed = False
+    else:
+        dest.write_bytes(template.read_bytes())
 
 
+def verdict(expected, proc, policy_name):
+    diagnostic = proc.stderr
+    named = policy_name in diagnostic
+    error = any(marker in diagnostic.lower() for marker in (
+        "failed to evaluate", "evaluation error", "resulted in error",
+        "no such key", "compilation failed", "exceeds budget",
+    ))
+    if error:
+        return False
+    if expected == "pass":
+        return proc.returncode == 0 and not named
+    if expected == "warn":
+        return proc.returncode == 0 and any(
+            "Warning:" in line and policy_name in line for line in diagnostic.splitlines()
+        )
+    if expected == "fail":
+        return proc.returncode != 0 and named and "denied request" in diagnostic
+    raise ValueError(f"Unknown expected result {expected!r}")
 
 
-# Delete the test namespace
-subprocess.check_call(['kubectl', 'delete', 'namespaces', 'test-namespace'],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+def run_case(test, policy_name, directory):
+    obj = directory / "object.yaml"
+    params = directory / "params.yaml"
+    binding = directory / "binding.yaml"
+    render(FIXTURES / test["template"], obj, test.get("field_change_list", []))
+    render(FIXTURES / test.get("param_template", "default-control-configuration.yaml"),
+           params, ["metadata.name=" + policy_name + "-params"])
+    changes = ["metadata.name=" + policy_name + "-binding", "spec.policyName=" + policy_name]
+    if not test.get("omit_param_ref"):
+        changes.append("spec.paramRef.name=" + policy_name + "-params")
+    render(FIXTURES / test.get("binding_template", "policy-binding.yaml"), binding, changes)
+    labels = yaml.safe_load(obj.read_text())["metadata"].get("labels", {})
+    selector = yaml.safe_load(binding.read_text())["spec"]["matchResources"]["objectSelector"]
+    if not all(labels.get(k) == v for k, v in selector["matchLabels"].items()):
+        raise ValueError(f"{test['name']}: binding does not select the fixture")
+    with ExitStack() as stack:
+        subresource = test.get("subresource")
+        if subresource:
+            if subresource != "status":
+                raise ValueError(f"Unsupported subresource {subresource}")
+            base = directory / "base.yaml"
+            document = yaml.safe_load(obj.read_text())
+            status = document.pop("status")
+            base.write_text(yaml.safe_dump(document))
+            create_owned(stack, base)
+        create_owned(stack, params)
+        create_owned(stack, binding)
+        # Admission configuration is propagated asynchronously.
+        time.sleep(1)
+        command = ["kubectl", "apply", "--dry-run=server", "-f", str(obj)]
+        if subresource:
+            command = ["kubectl", "patch", "--subresource=status", "--dry-run=server",
+                       "--type=merge", "-f", str(base), "-p", json.dumps({"status": status})]
+        proc = subprocess.run(command,
+                              capture_output=True, text=True)
+        if not verdict(test["expected"], proc, policy_name):
+            print(f"{test['name']}: expected {test['expected']}, exit {proc.returncode}\n"
+                  f"{proc.stderr}", file=sys.stderr)
+            return False
+        print(f"{test['name']}: {test['expected']}")
+        return True
 
-if all_tests_passed:
-    print(colored('Control tests passed!','green'))
-    sys.exit(0)
-else:
-    print(colored('Some control tests failed','red'))
-    sys.exit(1)
 
+def run(directory):
+    policy = Path("policy.yaml")
+    name = yaml.safe_load(policy.read_text())["metadata"]["name"]
+    with ExitStack() as stack:
+        kubectl("create", "namespace", "test-namespace")
+        stack.callback(kubectl, "delete", "namespace", "test-namespace")
+        crd = ROOT / "configuration/policy-configuration-definition.yaml"
+        existing = kubectl("get", "-f", str(crd), "--ignore-not-found", "-o", "name",
+                           capture_output=True).stdout.strip()
+        if not existing:
+            create_owned(stack, crd)
+        kubectl("wait", "--for=condition=Established", "-f", str(crd), "--timeout=60s")
+        create_owned(stack, policy)
+        outcomes = [run_case(test, name, directory) for test in json.loads(Path("tests.json").read_text())]
+        return all(outcomes)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-d", "--dont-cleanup", action="store_true",
+                        help="keep the generated manifests of the last case")
+    args = parser.parse_args()
+    if args.dont_cleanup:
+        directory = Path(tempfile.mkdtemp())
+        print(f"Generated manifests: {directory}", flush=True)
+        sys.exit(0 if run(directory) else 1)
+    with tempfile.TemporaryDirectory() as temp:
+        sys.exit(0 if run(Path(temp)) else 1)
