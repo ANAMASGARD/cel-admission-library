@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Unrelated Pod",
+    "template": "pod.yaml",
+    "expected": "pass"
+  },
+  {
+    "name": "Matching component",
+    "template": "pod.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "metadata.name=control-plane-test",
+      "metadata.namespace=kube-system",
+      "spec.containers.[0].command=[\"kube-apiserver\"]",
+      "spec.containers.[0].args=[\"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256\"]"
+    ]
+  },
+  {
+    "name": "Compliant component",
+    "template": "pod.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "metadata.name=control-plane-test",
+      "metadata.namespace=kube-system",
+      "spec.containers.[0].command=[\"kube-apiserver\"]",
+      "spec.containers.[0].args=[\"--tls-cipher-suites=TLS_AES_128_GCM_SHA256\"]"
+    ]
+  }
+]
