@@ -1,0 +1,27 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0005-insecure-port-flag
+  labels:
+    controlId: C-0005
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0005/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: object.metadata.name.contains('kube-apiserver')
+  validations:
+  - expression: object.spec.containers.all(c, !has(c.command) || c.command.all(a, !a.contains('--insecure-port=1')))
+    message: API server insecure port is enabled.

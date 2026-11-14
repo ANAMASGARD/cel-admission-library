@@ -1,0 +1,38 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0113-anonymous-auth
+  labels:
+    controlId: C-0113
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0113/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: |-
+      has(object.metadata.namespace) && object.metadata.namespace == 'kube-system' &&
+      object.spec.containers.size() == 1 && has(object.spec.containers[0].command) &&
+      object.spec.containers[0].command.size() > 0 &&
+      object.spec.containers[0].command[0].endsWith('kube-apiserver')
+  variables:
+  - name: flags
+    expression: |-
+      object.spec.containers[0].command +
+      (has(object.spec.containers[0].args) ? object.spec.containers[0].args : [])
+  validations:
+  - expression: |-
+      variables.flags.exists(a, a.contains('--anonymous-auth')) &&
+      variables.flags.all(a, !a.contains('--anonymous-auth=true'))
+    message: Ensure that the API Server --anonymous-auth argument is set to false.
