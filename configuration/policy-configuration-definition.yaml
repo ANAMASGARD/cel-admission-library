@@ -35,6 +35,10 @@ spec:
                   type: array
                   items:
                     type: string
+                agentSandboxEgressMode:
+                  type: array
+                  items:
+                    type: string
                 hardenedSandboxRuntimeClasses:
                   items:
                     type: string

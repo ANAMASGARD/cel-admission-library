@@ -123,6 +123,9 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0090](https://kubescape.io/docs/controls/c-0090/) | CVE-2022-39328-grafana-auth-bypass | [kubescape-c-0090-grafana-cve-version](/docs/policies-based-on-kubescape-controls/kubescape-c-0090-grafana-cve-version.md) | not configurable |
 | [C-0091](https://kubescape.io/docs/controls/c-0091/) | CVE-2022-47633-kyverno-signature-bypass | [kubescape-c-0091-kyverno-cve-version](/docs/policies-based-on-kubescape-controls/kubescape-c-0091-kyverno-cve-version.md) | not configurable |
 | [C-0239](https://kubescape.io/docs/controls/c-0239/) | Prefer using dedicated AKS Service Accounts | [kubescape-c-0239-default-service-account-role-bindings](/docs/policies-based-on-kubescape-controls/kubescape-c-0239-default-service-account-role-bindings.md) | not configurable |
+| [C-0301](https://kubescape.io/docs/controls/c-0301/) | Agent Sandbox egress policy enforcement | [kubescape-c-0301-scoped-agent-egress](/docs/policies-based-on-kubescape-controls/kubescape-c-0301-scoped-agent-egress.md) | not configurable |
+| [C-0315](https://kubescape.io/docs/controls/c-0315/) | Agent Sandbox strict egress policy | [kubescape-c-0315-strict-agent-egress](/docs/policies-based-on-kubescape-controls/kubescape-c-0315-strict-agent-egress.md) | agentSandboxEgressMode |
+| [C-0316](https://kubescape.io/docs/controls/c-0316/) | Agent Sandbox claim override restrictions | [kubescape-c-0316-agent-claim-overrides](/docs/policies-based-on-kubescape-controls/kubescape-c-0316-agent-claim-overrides.md) | not configurable |
 
 ## Testing Policies
 

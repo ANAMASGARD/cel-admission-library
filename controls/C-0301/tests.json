@@ -1,0 +1,39 @@
+[
+  {
+    "name": "Absent network policy",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail"
+  },
+  {
+    "name": "Empty egress",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.networkPolicy={\"egress\":[]}"
+    ]
+  },
+  {
+    "name": "192.0.2.0/24",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.networkPolicy={\"egress\": [{\"to\": [{\"ipBlock\": {\"cidr\": \"192.0.2.0/24\"}}]}]}"
+    ]
+  },
+  {
+    "name": "0.0.0.0/0",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.networkPolicy={\"egress\": [{\"to\": [{\"ipBlock\": {\"cidr\": \"0.0.0.0/0\"}}]}]}"
+    ]
+  },
+  {
+    "name": "::/0",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.networkPolicy={\"egress\": [{\"to\": [{\"ipBlock\": {\"cidr\": \"::/0\"}}]}]}"
+    ]
+  }
+]

@@ -1,0 +1,35 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0301-scoped-agent-egress
+  labels:
+    controlId: C-0301
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0301/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - extensions.agents.x-k8s.io
+      apiVersions:
+      - v1beta1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - sandboxtemplates
+  validations:
+  - expression: |-
+      (!has(object.spec.networkPolicyManagement) || object.spec.networkPolicyManagement == null || object.spec.networkPolicyManagement == 'Managed') &&
+      has(object.spec.networkPolicy) && type(object.spec.networkPolicy) == map &&
+      (!has(object.spec.networkPolicy.egress) || object.spec.networkPolicy.egress == null ||
+       (type(object.spec.networkPolicy.egress) == list && object.spec.networkPolicy.egress.all(e,
+        has(e.to) && type(e.to) == list && e.to.size() > 0 && e.to.all(p,
+          (has(p.ipBlock) && has(p.ipBlock.cidr) && type(p.ipBlock.cidr) == string &&
+           !(p.ipBlock.cidr in ['', '0.0.0.0/0', '::/0'])) ||
+          (has(p.podSelector) && ((has(p.podSelector.matchLabels) && size(p.podSelector.matchLabels) > 0) ||
+              (has(p.podSelector.matchExpressions) && size(p.podSelector.matchExpressions) > 0))) ||
+          (has(p.namespaceSelector) && ((has(p.namespaceSelector.matchLabels) && size(p.namespaceSelector.matchLabels) > 0) ||
+              (has(p.namespaceSelector.matchExpressions) && size(p.namespaceSelector.matchExpressions) > 0)))))))
+    message: Use a managed network policy with scoped egress peers.

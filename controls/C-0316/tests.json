@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Default",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "pass"
+  },
+  {
+    "name": "Volume override",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.volumeClaimTemplatesPolicy=Overrides"
+    ]
+  },
+  {
+    "name": "Environment override",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.envVarsInjectionPolicy=Overrides"
+    ]
+  }
+]

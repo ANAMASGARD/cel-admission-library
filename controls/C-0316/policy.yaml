@@ -1,0 +1,26 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0316-agent-claim-overrides
+  labels:
+    controlId: C-0316
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0316/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - extensions.agents.x-k8s.io
+      apiVersions:
+      - v1beta1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - sandboxtemplates
+  validations:
+  - expression: |-
+      (!has(object.spec.envVarsInjectionPolicy) || object.spec.envVarsInjectionPolicy != 'Overrides') &&
+      (!has(object.spec.volumeClaimTemplatesPolicy) || object.spec.volumeClaimTemplatesPolicy != 'Overrides')
+    message: Disallow claim overrides of environment and volume templates.

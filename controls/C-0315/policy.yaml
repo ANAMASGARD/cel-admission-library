@@ -1,0 +1,30 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0315-strict-agent-egress
+  labels:
+    controlId: C-0315
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0315/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - extensions.agents.x-k8s.io
+      apiVersions:
+      - v1beta1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - sandboxtemplates
+  validations:
+  - expression: |-
+      params == null || !has(params.settings) || !has(params.settings.agentSandboxEgressMode) ||
+      !('strict' in params.settings.agentSandboxEgressMode) || ((!has(object.spec.networkPolicyManagement) || object.spec.networkPolicyManagement == null || object.spec.networkPolicyManagement == 'Managed') && has(object.spec.networkPolicy) && has(object.spec.networkPolicy.egress) &&
+      type(object.spec.networkPolicy.egress) == list && size(object.spec.networkPolicy.egress) == 0)
+    message: Strict egress requires a managed policy with explicit empty egress.
+  paramKind:
+    apiVersion: kubescape.io/v1
+    kind: ControlConfiguration

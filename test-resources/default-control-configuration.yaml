@@ -5,6 +5,7 @@ metadata:
 settings:
   floatingImageTags: []
   imageDigestExemptRepositories: []
+  agentSandboxEgressMode: ["managed"]
   hardenedSandboxRuntimeClasses:
   - gvisor
   cpuLimitMax: 5

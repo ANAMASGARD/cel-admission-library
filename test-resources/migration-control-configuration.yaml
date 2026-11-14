@@ -10,3 +10,5 @@ settings:
   - stable
   imageDigestExemptRepositories:
   - registry.example/team
+  agentSandboxEgressMode:
+  - strict
