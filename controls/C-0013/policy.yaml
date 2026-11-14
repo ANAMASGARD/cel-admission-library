@@ -23,64 +23,20 @@ spec:
       operations:  ["CREATE", "UPDATE"]
       resources:   ["jobs","cronjobs"]
   variables:
-    - expression: |
-        object.kind == 'Pod'
-          ? object.spec.containers + (has(object.spec.initContainers) ? object.spec.initContainers : []) + (has(object.spec.ephemeralContainers) ? object.spec.ephemeralContainers : [])
-          : object.kind in ['Deployment','ReplicaSet','DaemonSet','StatefulSet','Job']
-            ? object.spec.template.spec.containers + (has(object.spec.template.spec.initContainers) ? object.spec.template.spec.initContainers : []) + (has(object.spec.template.spec.ephemeralContainers) ? object.spec.template.spec.ephemeralContainers : [])
-            : object.kind == 'CronJob'
-              ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : []) + (has(object.spec.jobTemplate.spec.template.spec.ephemeralContainers) ? object.spec.jobTemplate.spec.template.spec.ephemeralContainers : [])
-              : []
-      name: containers
-    - expression: |
-        object.kind == 'Pod' ? object.spec.?securityContext.orValue({})
-        : object.kind in ['Deployment','ReplicaSet','DaemonSet','StatefulSet','Job'] ? object.spec.template.spec.?securityContext.orValue({})
-        : object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec.?securityContext.orValue({})
-        : {}
-      name: podSecurityContext
+    - name: podSpec
+      expression: >-
+        object.kind == 'Pod' ? object.spec : object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec : object.spec.template.spec
+    - name: podContext
+      expression: variables.podSpec.?securityContext.orValue({})
+    - name: containers
+      expression: >-
+        variables.podSpec.containers + variables.podSpec.?initContainers.orValue([]) +
+        variables.podSpec.?ephemeralContainers.orValue([])
   validations:
-    - expression: >
-        variables.containers.all(container,
-          (
-            has(container.securityContext) &&
-            has(container.securityContext.allowPrivilegeEscalation) &&
-            container.securityContext.allowPrivilegeEscalation == false
-          ) &&
-          (
-            (
-              (
-                has(container.securityContext) &&
-                has(container.securityContext.runAsNonRoot) &&
-                container.securityContext.runAsNonRoot == true
-              ) ||
-              (
-                (
-                  !has(container.securityContext) || !has(container.securityContext.runAsNonRoot)
-                ) &&
-                (
-                  has(variables.podSecurityContext) &&
-                  has(variables.podSecurityContext.runAsNonRoot) &&
-                  variables.podSecurityContext.runAsNonRoot == true
-                )
-              )
-            ) ||
-            (
-              (
-                has(container.securityContext) &&
-                has(container.securityContext.runAsUser) &&
-                container.securityContext.runAsUser != 0
-              ) ||
-              (
-                (
-                  !has(container.securityContext) || !has(container.securityContext.runAsUser)
-                ) &&
-                (
-                  has(variables.podSecurityContext) &&
-                  has(variables.podSecurityContext.runAsUser) &&
-                  variables.podSecurityContext.runAsUser != 0
-                )
-              )
-            )
-          )
-        )
-      messageExpression: object.kind + "/" + object.metadata.name + " contains container/s which have the capability to run as root! (see more at https://kubescape.io/docs/controls/c-0013/)"
+    - expression: >-
+        variables.containers.all(c,
+          (c.?securityContext.?runAsNonRoot.orValue(variables.podContext.?runAsNonRoot.orValue(false)) ||
+           c.?securityContext.?runAsUser.orValue(variables.podContext.?runAsUser.orValue(0)) != 0) &&
+          (variables.podSpec.?os.?name.orValue('') == 'windows' ||
+           c.?securityContext.?runAsGroup.orValue(variables.podContext.?runAsGroup.orValue(0)) != 0))
+      message: Containers must have an effective non-root user and, on Linux, non-root group.

@@ -1,266 +1,179 @@
 [
     {
-        "name": "Pod with PodSecurityContext not set and allowPreviligeEscalation not set in atleast one ContainerSecurityContext is blocked",
-        "template": "pod.yaml",
-        "expected": "fail",
-        "field_change_list": [
-        ]
-    },
-    {
-        "name": "Pod with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero and allowPreviligeEscalation set to false is allowed",
+        "name": "pod Inherited non-root UID and GID",
         "template": "pod.yaml",
         "expected": "pass",
         "field_change_list": [
-            "spec.containers.[0].securityContext.runAsUser=100",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
+            "spec.securityContext={\"runAsUser\": 1000, \"runAsGroup\": 2000}"
         ]
     },
     {
-        "name": "Pod with PodSecurityContext not set and ContainerSecurityContext runAsNonRoot set to true and allowPreviligeEscalation set to false is allowed",
-        "template": "pod.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
-        ]
-    },
-    {
-        "name": "Pod with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero, runAsNonRoot set to true and allowPreviligeEscalation set to false is allowed",
-        "template": "pod.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.runAsUser=100",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
-        ]
-    },
-    {
-        "name": "Pod with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero and allowPreviligeEscalation set to true is denied",
+        "name": "pod Missing group",
         "template": "pod.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.containers.[0].securityContext.runAsUser=100",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=true"
+            "spec.securityContext={\"runAsNonRoot\": true}"
         ]
     },
     {
-        "name": "Pod with PodSecurityContext not set and ContainerSecurityContext runAsNonRoot set to true and allowPreviligeEscalation set to true is denied",
+        "name": "pod Container overrides inherited group",
         "template": "pod.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=true"
+            "spec.securityContext={\"runAsUser\": 2, \"runAsGroup\": 2}",
+            "spec.containers.[0].securityContext={\"runAsGroup\": 0}"
         ]
     },
     {
-        "name": "Pod with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero, runAsNonRoot set to true and allowPreviligeEscalation set to true is denied",
+        "name": "pod Root user and group",
         "template": "pod.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.runAsUser=100",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=true"
+            "spec.securityContext={\"runAsUser\": 0, \"runAsGroup\": 0}"
         ]
     },
     {
-        "name": "Pod with runAsNonRoot set true in PodSecurityContext and runAsNonRoot not set in ContainerSecurityContext and allowPreviligeEscalation set to false is allowed",
+        "name": "pod Independent escalation control",
         "template": "pod.yaml",
         "expected": "pass",
         "field_change_list": [
-            "spec.securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
+            "spec.containers.[0].securityContext={\"runAsNonRoot\": true, \"runAsGroup\": 2000, \"allowPrivilegeEscalation\": true}"
         ]
     },
     {
-        "name": "Pod with runAsUser set to non-zero value in PodSecurityContext and runAsUser not set in ContainerSecurityContext and allowPreviligeEscalation set to false is allowed",
-        "template": "pod.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
-        ]
-    },
-    {
-        "name": "Pod with runAsNonRoot set true in PodSecurityContext and runAsNonRoot set to false and runAsUser not set in ContainerSecurityContext and allowPreviligeEscalation set to false is denied",
+        "name": "pod Init overrides UID",
         "template": "pod.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.runAsNonRoot=false",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
+            "spec.securityContext={\"runAsUser\": 1000, \"runAsGroup\": 1000}",
+            "spec.initContainers=[{\"name\": \"init\", \"image\": \"busybox\", \"securityContext\": {\"runAsUser\": 0}}]"
         ]
     },
     {
-        "name": "Deployment with PodSecurityContext not set and allowPreviligeEscalation not set in atleast one ContainerSecurityContext is blocked",
-        "template": "deployment.yaml",
-        "expected": "fail",
+        "name": "pod Windows omits GID",
+        "template": "pod.yaml",
+        "expected": "pass",
         "field_change_list": [
+            "spec.os.name=\"windows\"",
+            "spec.securityContext={\"runAsNonRoot\": true}"
         ]
     },
     {
-        "name": "Deployment with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero and allowPreviligeEscalation set to false is allowed",
+        "name": "deployment Inherited non-root UID and GID",
         "template": "deployment.yaml",
         "expected": "pass",
         "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.runAsUser=100",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
+            "spec.template.spec.securityContext={\"runAsUser\": 1000, \"runAsGroup\": 2000}"
         ]
     },
     {
-        "name": "Deployment with PodSecurityContext not set and ContainerSecurityContext runAsNonRoot set to true and allowPreviligeEscalation set to false is allowed",
-        "template": "deployment.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
-        ]
-    },
-    {
-        "name": "Deployment with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero, runAsNonRoot set to true and allowPreviligeEscalation set to false is allowed",
-        "template": "deployment.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.template.spec.containers.[0].securityContext.runAsUser=100",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
-        ]
-    },
-    {
-        "name": "Deployment with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero and allowPreviligeEscalation set to true is denied",
+        "name": "deployment Missing group",
         "template": "deployment.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.runAsUser=100",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=true"
+            "spec.template.spec.securityContext={\"runAsNonRoot\": true}"
         ]
     },
     {
-        "name": "Deployment with PodSecurityContext not set and ContainerSecurityContext runAsNonRoot set to true and allowPreviligeEscalation set to true is denied",
+        "name": "deployment Container overrides inherited group",
         "template": "deployment.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=true"
+            "spec.template.spec.securityContext={\"runAsUser\": 2, \"runAsGroup\": 2}",
+            "spec.template.spec.containers.[0].securityContext={\"runAsGroup\": 0}"
         ]
     },
     {
-        "name": "Deployment with PodSecurityContext not set and ContainerSecurityContext runAsUser is non-zero, runAsNonRoot set to true and allowPreviligeEscalation set to true is denied",
+        "name": "deployment Root user and group",
         "template": "deployment.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.template.spec.containers.[0].securityContext.runAsUser=100",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=true"
+            "spec.template.spec.securityContext={\"runAsUser\": 0, \"runAsGroup\": 0}"
         ]
     },
     {
-        "name": "Deployment with runAsNonRoot set true in PodSecurityContext and runAsNonRoot not set in ContainerSecurityContext and allowPreviligeEscalation set to false is allowed",
+        "name": "deployment Independent escalation control",
         "template": "deployment.yaml",
         "expected": "pass",
         "field_change_list": [
-            "spec.template.spec.securityContext.runAsNonRoot=true",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
+            "spec.template.spec.containers.[0].securityContext={\"runAsNonRoot\": true, \"runAsGroup\": 2000, \"allowPrivilegeEscalation\": true}"
         ]
     },
     {
-        "name": "Deployment with runAsUser set to non-zero value in PodSecurityContext and runAsUser not set in ContainerSecurityContext and allowPreviligeEscalation set to false is allowed",
-        "template": "deployment.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.template.spec.securityContext.runAsNonRoot=true",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
-        ]
-    },
-    {
-        "name": "Deployment with runAsNonRoot set true in PodSecurityContext and runAsNonRoot set to false and runAsUser not set in ContainerSecurityContext and allowPreviligeEscalation set to false is denied",
+        "name": "deployment Init overrides UID",
         "template": "deployment.yaml",
         "expected": "fail",
         "field_change_list": [
-            "spec.template.spec.securityContext.runAsNonRoot=true",
-            "spec.template.spec.containers.[0].securityContext.runAsNonRoot=false",
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false"
+            "spec.template.spec.securityContext={\"runAsUser\": 1000, \"runAsGroup\": 1000}",
+            "spec.template.spec.initContainers=[{\"name\": \"init\", \"image\": \"busybox\", \"securityContext\": {\"runAsUser\": 0}}]"
         ]
     },
     {
-        "name": "Pod having initContainer without securityContext is blocked",
-        "template": "pod-with-init-container.yaml",
-        "expected": "fail",
-        "field_change_list": [
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.containers.[0].securityContext.runAsNonRoot=true"
-        ]
-    },
-    {
-        "name": "Pod having initContainer with runAsNonRoot set to true and allowPrivilegeEscalation set to false is allowed",
-        "template": "pod-with-init-container.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.initContainers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.initContainers.[0].securityContext.runAsNonRoot=true"
-        ]
-    },
-    {
-        "name": "Pod with runAsNonRoot set true in PodSecurityContext and allowPrivilegeEscalation set to false in container and initContainer is allowed",
-        "template": "pod-with-init-container.yaml",
-        "expected": "pass",
-        "field_change_list": [
-            "spec.securityContext.runAsNonRoot=true",
-            "spec.containers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.initContainers.[0].securityContext.allowPrivilegeEscalation=false"
-        ]
-    },
-    {
-        "name": "Deployment having initContainer with allowPrivilegeEscalation set to true is blocked",
-        "template": "deployment.yaml",
-        "expected": "fail",
-        "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.template.spec.initContainers.[0].name=init",
-            "spec.template.spec.initContainers.[0].image=alpine",
-            "spec.template.spec.initContainers.[0].securityContext.allowPrivilegeEscalation=true",
-            "spec.template.spec.initContainers.[0].securityContext.runAsNonRoot=true"
-        ]
-    },
-    {
-        "name": "Deployment having initContainer with runAsNonRoot set to true and allowPrivilegeEscalation set to false is allowed",
+        "name": "deployment Windows omits GID",
         "template": "deployment.yaml",
         "expected": "pass",
         "field_change_list": [
-            "spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.template.spec.initContainers.[0].name=init",
-            "spec.template.spec.initContainers.[0].image=alpine",
-            "spec.template.spec.initContainers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.template.spec.initContainers.[0].securityContext.runAsNonRoot=true"
+            "spec.template.spec.os.name=\"windows\"",
+            "spec.template.spec.securityContext={\"runAsNonRoot\": true}"
         ]
     },
     {
-        "name": "CronJob having initContainer with allowPrivilegeEscalation set to true is blocked",
-        "template": "cronjob.yaml",
-        "expected": "fail",
-        "field_change_list": [
-            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].name=init",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].image=alpine",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].securityContext.allowPrivilegeEscalation=true",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].securityContext.runAsNonRoot=true"
-        ]
-    },
-    {
-        "name": "CronJob having initContainer with runAsNonRoot set to true and allowPrivilegeEscalation set to false is allowed",
+        "name": "cronjob Inherited non-root UID and GID",
         "template": "cronjob.yaml",
         "expected": "pass",
         "field_change_list": [
-            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext.runAsNonRoot=true",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].name=init",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].image=alpine",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].securityContext.allowPrivilegeEscalation=false",
-            "spec.jobTemplate.spec.template.spec.initContainers.[0].securityContext.runAsNonRoot=true"
+            "spec.jobTemplate.spec.template.spec.securityContext={\"runAsUser\": 1000, \"runAsGroup\": 2000}"
+        ]
+    },
+    {
+        "name": "cronjob Missing group",
+        "template": "cronjob.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.securityContext={\"runAsNonRoot\": true}"
+        ]
+    },
+    {
+        "name": "cronjob Container overrides inherited group",
+        "template": "cronjob.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.securityContext={\"runAsUser\": 2, \"runAsGroup\": 2}",
+            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext={\"runAsGroup\": 0}"
+        ]
+    },
+    {
+        "name": "cronjob Root user and group",
+        "template": "cronjob.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.securityContext={\"runAsUser\": 0, \"runAsGroup\": 0}"
+        ]
+    },
+    {
+        "name": "cronjob Independent escalation control",
+        "template": "cronjob.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.containers.[0].securityContext={\"runAsNonRoot\": true, \"runAsGroup\": 2000, \"allowPrivilegeEscalation\": true}"
+        ]
+    },
+    {
+        "name": "cronjob Init overrides UID",
+        "template": "cronjob.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.securityContext={\"runAsUser\": 1000, \"runAsGroup\": 1000}",
+            "spec.jobTemplate.spec.template.spec.initContainers=[{\"name\": \"init\", \"image\": \"busybox\", \"securityContext\": {\"runAsUser\": 0}}]"
+        ]
+    },
+    {
+        "name": "cronjob Windows omits GID",
+        "template": "cronjob.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.jobTemplate.spec.template.spec.os.name=\"windows\"",
+            "spec.jobTemplate.spec.template.spec.securityContext={\"runAsNonRoot\": true}"
         ]
     }
 ]
