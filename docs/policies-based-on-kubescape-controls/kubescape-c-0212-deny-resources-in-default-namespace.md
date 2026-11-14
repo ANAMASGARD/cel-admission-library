@@ -48,3 +48,5 @@ The second case only ever shows up when the manifest is read from a file, for ex
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+The core Service and Endpoints named `kubernetes` in the explicit `default` namespace are exempt. Kubernetes creates these objects for its API endpoint. Other kinds with the same name still fail.
