@@ -1,10 +1,10 @@
-bases:
-- ../../controls
-- ../../runtime-policies
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../k8s-v1alpha1
 patches:
-  - target:
-      group: admissionregistration.k8s.io
-      version: v1beta1
-      kind: ValidatingAdmissionPolicy
-      name: ""
-    path: patch.json
+- target:
+    group: admissionregistration.k8s.io
+    version: v1alpha1
+    kind: ValidatingAdmissionPolicy
+  path: patch.json

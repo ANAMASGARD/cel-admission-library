@@ -1,10 +1,22 @@
-bases:
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../controls
 - ../../runtime-policies
 patches:
-  - target:
-      group: admissionregistration.k8s.io
-      version: v1beta1
-      kind: ValidatingAdmissionPolicy
-      name: ""
-    path: patch.json
+- target:
+    group: admissionregistration.k8s.io
+    version: v1
+    kind: ValidatingAdmissionPolicy
+    labelSelector: controlId in (C-0001,C-0004,C-0013,C-0016,C-0017,C-0050,C-0055,C-0075,C-0078,C-0081,C-0197,C-0210,C-0268,C-0269,C-0270,C-0271,C-0280,C-0303,C-0304,C-0317)
+  patch: |
+    $patch: delete
+    apiVersion: admissionregistration.k8s.io/v1
+    kind: ValidatingAdmissionPolicy
+    metadata:
+      name: unused
+- target:
+    group: admissionregistration.k8s.io
+    version: v1
+    kind: ValidatingAdmissionPolicy
+  path: patch.json

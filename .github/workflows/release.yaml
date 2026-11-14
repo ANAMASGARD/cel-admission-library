@@ -1,47 +1,130 @@
-name: "Release"
+name: Release
 on:
+  pull_request:
+    paths:
+      - 'apis/**'
+      - 'controls/**'
+      - 'runtime-policies/**'
+      - 'configuration/**'
+      - 'scripts/build-release.py'
+      - 'scripts/check-release-admission.sh'
+      - '.github/workflows/release.yaml'
   push:
-    branches-ignore:
-      - "**"
-    tags:
-      - "v*"
+    tags: ['v*']
+
+permissions:
+  contents: read
 
 jobs:
-  release:
+  render:
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Verify release tagged commit is on main
-        run: |
-          git fetch origin main
-          git merge-base --is-ancestor ${GITHUB_REF##*/} origin/main && echo "${GITHUB_REF##*/} is a commit on main!"
-
-      - uses: azure/setup-kubectl@v3
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
         with:
-          kubernetes-version: v1.31.1
-
-      - name: Create release artifacts
-        run: |
-          mkdir release
-          kubectl kustomize apis/k8s-v1/ > release/kubescape-validating-admission-policies-v1.yaml
-          kubectl kustomize apis/k8s-v1beta1/ > release/kubescape-validating-admission-policies-v1beta1.yaml
-          kubectl kustomize apis/x-k8s-v1alpha1/ > release/kubescape-validating-admission-policies-x-v1alpha1.yaml
-          kubectl kustomize apis/k8s-v1alpha1/ > release/kubescape-validating-admission-policies-v1alpha1.yaml
-          # Making a copy of the v1 file to be used as the default policy release artifact
-          cp release/kubescape-validating-admission-policies-v1.yaml release/kubescape-validating-admission-policies.yaml
-
-      - name: Create a GitHub release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+          version: v1.31.1
+      - run: python -m pip install PyYAML
+      - run: python scripts/build-release.py release
+      - uses: actions/upload-artifact@v4
         with:
-          files: |
-            release/kubescape-validating-admission-policies.yaml
-            release/kubescape-validating-admission-policies-v1.yaml
-            release/kubescape-validating-admission-policies-v1beta1.yaml
-            release/kubescape-validating-admission-policies-x-v1alpha1.yaml
-            release/kubescape-validating-admission-policies-v1alpha1.yaml
-            configuration/policy-configuration-definition.yaml
-            configuration/basic-control-configuration.yaml
+          name: release-bundles
+          path: release/
+          if-no-files-found: error
+
+  verify:
+    needs: render
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { suffix: v1, image: 'kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865' }
+          - { suffix: v1beta1, image: 'kindest/node:v1.28.0@sha256:b7a4cad12c197af3ba43202d3efe03246b3f0793f162afb40a33c923952d5b31' }
+          - { suffix: v1alpha1, image: 'kindest/node:v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72' }
+          - { suffix: x-v1alpha1, image: 'kindest/node:v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundles
+          path: release
+      - run: sha256sum -c SHA256SUMS
+        working-directory: release
+      - name: Select admission API
+        env:
+          SUFFIX: ${{ matrix.suffix }}
+        run: |
+          cat > cluster.yaml <<'YAML'
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          YAML
+          if [[ "$SUFFIX" != v1 ]]; then
+            version=${SUFFIX#x-}
+            cat >> cluster.yaml <<YAML
+          featureGates:
+            ValidatingAdmissionPolicy: true
+          runtimeConfig:
+            admissionregistration.k8s.io/$version: "true"
+          nodes:
+          - role: control-plane
+            kubeadmConfigPatches:
+            - |
+              kind: ClusterConfiguration
+              apiServer:
+                extraArgs:
+                  enable-admission-plugins: ValidatingAdmissionPolicy
+          YAML
+          fi
+      - uses: helm/kind-action@v1.12.0
+        with:
+          version: v0.24.0
+          cluster_name: release-qualification
+          config: cluster.yaml
+          node_image: ${{ matrix.image }}
+      - uses: actions/checkout@v4
+        if: matrix.suffix == 'x-v1alpha1'
+        with:
+          repository: kubernetes/cel-admission-webhook
+          ref: 4d862d34ffeec39f15fa4b21263529b5b813b179
+          path: shim
+      - name: Install the x-k8s webhook and CRDs
+        if: matrix.suffix == 'x-v1alpha1'
+        working-directory: shim
+        run: |
+          docker build -t kubernetes-x/cel-shim-webhook:v1 .
+          kind load docker-image --name release-qualification kubernetes-x/cel-shim-webhook:v1
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -keyout shim.key -out shim.crt \
+            -subj /CN=cel-shim-webhook.default.svc -addext subjectAltName=DNS:cel-shim-webhook.default.svc
+          kubectl create secret tls cel-shim-webhook.tls.example.com --cert=shim.crt --key=shim.key
+          kubectl apply -f artifacts/crds -f manifests/auth.yaml -f manifests/service.yaml -f manifests/deployment.yaml
+          kubectl rollout status deployment/cel-shim-webhook --timeout=120s
+          ca=$(base64 -w0 shim.crt)
+          kubectl patch --local --type=json -f manifests/webhook-config.yaml \
+            -p="[{\"op\":\"replace\",\"path\":\"/webhooks/0/clientConfig/caBundle\",\"value\":\"$ca\"}]" -o yaml | kubectl apply -f -
+      - name: Compile policies and qualify admission
+        run: bash scripts/check-release-admission.sh release "${{ matrix.suffix }}"
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify tagged commit is on main
+        run: git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundles
+          path: release
+      - run: sha256sum -c SHA256SUMS
+        working-directory: release
+      - uses: softprops/action-gh-release@v2
+        with:
+          body: |
+            The default and v1 YAML contain the full catalog. The legacy bundles contain compatible subsets.
+            Review the attached policy-coverage.md for individual controls and SHA256SUMS for artifact digests.
+          files: release/*

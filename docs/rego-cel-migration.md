@@ -34,6 +34,23 @@ The upstream harness pins seven concrete resource differences as defects across 
 
 **PSA subject decisions.** Rego evaluates the `pod-security.kubernetes.io/enforce` label on the Namespace. The library checks workload fields. The milestone approved that change of subject for C-0193, C-0194, C-0195, C-0197, C-0202, C-0203 and C-0204. Four older workload policies, C-0198–C-0201, served as precedent and still need their own explicit disposition. C-0196 is the missing sibling. Its candidate evaluates the baseline or restricted Namespace label. Extending the workload convention to C-0196 would require a separate decision. [Milestone decision](https://github.com/kubescape/cel-admission-library/issues/99) · [Rego baseline Namespace rule](https://github.com/kubescape/regolibrary/tree/b7e57060ca90c41fe15359383245a7c62f09487c/rules/pod-security-admission-baseline-applied-1)
 
+## Results after migration
+
+The stable bundle now includes **136 control policies** (66 existing and 70 added) and six runtime policies. Of the original 228 missing IDs, 157 have the catalog blockers below and C-0319 remains blocked on runtime enforcement. The stable release and its qualified legacy subsets are listed in the [release compatibility guide](../apis/README.md). The [C-0319 runtime check](c0319-volume-mount-runtime-qualification.md) records the feature-gated admission results.
+
+The [fixture runner](../scripts/parity/README.md) exercised 953 cases in shipped-default and fixture-specific configuration modes against the revisions above. Its report for stable bundle SHA-256 `89fb4eed7a5bb24c938c2fe1f9597a300a7ed18fc559a068ce1dba39a2dc4ada` contains 1,703 agreements, 136 disagreements, 66 comparisons where neither engine evaluated a subject, 45 unknowns, and one mismatch between an upstream expectation and its Rego source rule. These are resource verdicts. Remediation paths and finding counts require separate comparison.
+
+| Controls | Remaining engine disagreement |
+| --- | --- |
+| C-0034 | A scanner can resolve the referenced ServiceAccount when determining effective token mounting. |
+| C-0042 | The scanner can associate Services with workloads and report the combined finding. |
+| C-0044 | Rego reports an explicitly specified zero host port. Kubernetes treats it as unset. |
+| C-0055 | The admission policy accepts additional Linux hardening methods, including effective AppArmor and dropped capabilities. |
+| C-0193–C-0195, C-0197–C-0204 | The scanner examines Namespace PSA labels. The existing admission policies examine workload security fields. |
+| C-0280 | The scanner resolves bindings and reports effective CSR approvers. Admission restricts the Role or ClusterRole before a binding exists. |
+
+38 source expectations have ambiguous resource identities or aggregate multiple objects. Three source fixture directories contain no input. For four rules without upstream fixtures (C-0081, C-0087, C-0090 and C-0091), local vulnerable, fixed and unrelated cases agreed in both modes. For C-0212, one Secret rule fixture expects a ConfigMap finding. The two Kubernetes-managed exemptions pass native admission, and the separate source expectation remains visible in the report.
+
 ## Review batches
 
 Numbers in the inventory are proposed review batches for this repository. Batch 1 owns the catalog and blocker records, batch 2 the native test runner, and batch 3 the scanner comparison with candidate policies. Batch 3 should compare pass, fail and not-evaluated by resource identity, require actual evaluation on in-scope objects, check source expectations, and cover both shipped defaults and fixture-specific overrides. Batch 29 rechecks the full crosswalk, rendered release artifacts, admission results and accepted differences at the delivered revision. The remaining numbers identify the owner of each control-specific decision. [Conversion guide](../CONVERSION_GUIDE.md) · [Native test runner at the baseline](https://github.com/kubescape/cel-admission-library/blob/a19021a73782eebbfc9736ac16381f1f11fcc2d7/scripts/run-control-tests.py)
