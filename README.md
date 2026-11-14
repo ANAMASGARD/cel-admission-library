@@ -128,6 +128,7 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0316](https://kubescape.io/docs/controls/c-0316/) | Agent Sandbox claim override restrictions | [kubescape-c-0316-agent-claim-overrides](/docs/policies-based-on-kubescape-controls/kubescape-c-0316-agent-claim-overrides.md) | not configurable |
 | [C-0303](https://kubescape.io/docs/controls/c-0303/) | Agent Sandbox resource ceilings | [kubescape-c-0303-sandbox-resource-limits](/docs/policies-based-on-kubescape-controls/kubescape-c-0303-sandbox-resource-limits.md) | sandboxCpuLimitMax, sandboxMemoryLimitMax |
 | [C-0317](https://kubescape.io/docs/controls/c-0317/) | Agent Substrate Worker Pod resource ceilings | [kubescape-c-0317-worker-resource-ceilings](/docs/policies-based-on-kubescape-controls/kubescape-c-0317-worker-resource-ceilings.md) | workerCpuLimitMax, workerMemoryLimitMax |
+| [C-0304](https://kubescape.io/docs/controls/c-0304/) | Agent Sandbox image provenance | [kubescape-c-0304-agent-image-provenance](/docs/policies-based-on-kubescape-controls/kubescape-c-0304-agent-image-provenance.md) | imageRepositoryAllowList, floatingImageTags |
 
 ## Testing Policies
 

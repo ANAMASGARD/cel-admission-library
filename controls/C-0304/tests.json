@@ -1,0 +1,47 @@
+[
+  {
+    "name": "nginx:1.29",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "pass",
+    "param_template": "migration-control-configuration.yaml",
+    "field_change_list": [
+      "spec.podTemplate.spec.containers.[0].image=nginx:1.29"
+    ]
+  },
+  {
+    "name": "evil.example/app:v1",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "param_template": "migration-control-configuration.yaml",
+    "field_change_list": [
+      "spec.podTemplate.spec.containers.[0].image=evil.example/app:v1"
+    ]
+  },
+  {
+    "name": "ghcr.io.example/app:v1",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "param_template": "migration-control-configuration.yaml",
+    "field_change_list": [
+      "spec.podTemplate.spec.containers.[0].image=ghcr.io.example/app:v1"
+    ]
+  },
+  {
+    "name": "gcr.io/app:latest",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "param_template": "migration-control-configuration.yaml",
+    "field_change_list": [
+      "spec.podTemplate.spec.containers.[0].image=gcr.io/app:latest"
+    ]
+  },
+  {
+    "name": "nginx:stable",
+    "template": "agent-sandbox-template.yaml",
+    "expected": "fail",
+    "param_template": "migration-control-configuration.yaml",
+    "field_change_list": [
+      "spec.podTemplate.spec.containers.[0].image=nginx:stable"
+    ]
+  }
+]

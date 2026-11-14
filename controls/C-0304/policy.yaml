@@ -1,0 +1,43 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0304-agent-image-provenance
+  labels:
+    controlId: C-0304
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0304/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - extensions.agents.x-k8s.io
+      apiVersions:
+      - v1beta1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - sandboxtemplates
+  variables:
+  - name: podSpec
+    expression: object.spec.?podTemplate.?spec.orValue({})
+  - name: images
+    expression: |-
+      (variables.podSpec.?containers.orValue([]) + variables.podSpec.?initContainers.orValue([]))
+      .filter(c, has(c.image) && c.image != '').map(c, c.image)
+  - name: normalized
+    expression: 'variables.images.map(i, (!i.contains(''/'') || (!i.matches(''^[^/]*[.:][^/]*/'') && !i.startsWith(''localhost/'')))
+      ? ''docker.io/'' + i : i)'
+  validations:
+  - expression: |-
+      variables.normalized.all(i, params != null && has(params.settings) && has(params.settings.imageRepositoryAllowList) &&
+        params.settings.imageRepositoryAllowList.exists(r, r.endsWith('/') ? i.startsWith(r) :
+          i == r || i.startsWith(r + '/') || (r.contains('/') && (i.startsWith(r + ':') || i.startsWith(r + '@'))))) &&
+      variables.images.all(i, i.contains('@') || [i.split('/')[i.split('/').size()-1].split(':')].all(p,
+        p.size() == 2 && p[1] != 'latest' &&
+        (params == null || !has(params.settings) || !has(params.settings.floatingImageTags) || !(p[1] in params.settings.floatingImageTags))))
+    message: Use an allowed image source and a non-floating version or digest.
+  paramKind:
+    apiVersion: kubescape.io/v1
+    kind: ControlConfiguration
