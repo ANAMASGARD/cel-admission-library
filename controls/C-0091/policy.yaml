@@ -1,0 +1,30 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0091-kyverno-cve-version
+  labels:
+    controlId: C-0091
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0091/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - deployments
+  matchConditions:
+  - name: affected-component
+    expression: object.spec.template.spec.containers.exists(c, c.image.contains('kyverno:'))
+  variables:
+  - name: images
+    expression: object.spec.template.spec.containers.filter(c, c.image.contains('kyverno:')).map(c, c.image.split(':v'))
+  validations:
+  - expression: variables.images.all(parts, parts.size() < 2 || !parts[1].matches('^0*1[.]0*8[.]0*[34]$'))
+    message: Upgrade the affected kyverno image.

@@ -1,0 +1,31 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0090-grafana-cve-version
+  labels:
+    controlId: C-0090
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0090/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - deployments
+  matchConditions:
+  - name: affected-component
+    expression: object.spec.template.spec.containers.exists(c, c.image.contains('grafana:'))
+  variables:
+  - name: images
+    expression: object.spec.template.spec.containers.filter(c, c.image.contains('grafana:')).map(c, c.image.replace('-ubuntu',
+      '').split(':'))
+  validations:
+  - expression: variables.images.all(parts, parts.size() < 2 || !parts[1].matches('^0*9[.]0*2[.]0*[0-3]$'))
+    message: Upgrade the affected grafana image.

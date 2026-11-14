@@ -1,0 +1,34 @@
+[
+  {
+    "name": "ghcr.io/kyverno/kyverno:v1.8.3",
+    "template": "deployment.yaml",
+    "expected": "fail",
+    "field_change_list": [
+      "spec.template.spec.containers.[0].image=ghcr.io/kyverno/kyverno:v1.8.3"
+    ]
+  },
+  {
+    "name": "ghcr.io/kyverno/kyverno:v1.8.5",
+    "template": "deployment.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.template.spec.containers.[0].image=ghcr.io/kyverno/kyverno:v1.8.5"
+    ]
+  },
+  {
+    "name": "kyverno:unknown",
+    "template": "deployment.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.template.spec.containers.[0].image=kyverno:unknown"
+    ]
+  },
+  {
+    "name": "other/image:9.2.3",
+    "template": "deployment.yaml",
+    "expected": "pass",
+    "field_change_list": [
+      "spec.template.spec.containers.[0].image=other/image:9.2.3"
+    ]
+  }
+]

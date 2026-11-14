@@ -120,6 +120,8 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0253](https://kubescape.io/docs/controls/c-0253/) | Deprecated Kubernetes image registry | [kubescape-c-0253-deprecated-kubernetes-registry](/docs/policies-based-on-kubescape-controls/kubescape-c-0253-deprecated-kubernetes-registry.md) | not configurable |
 | [C-0305](https://kubescape.io/docs/controls/c-0305/) | No rolling update strategy | [kubescape-c-0305-rolling-update-strategy](/docs/policies-based-on-kubescape-controls/kubescape-c-0305-rolling-update-strategy.md) | not configurable |
 | [C-0306](https://kubescape.io/docs/controls/c-0306/) | Images not pinned to digest | [kubescape-c-0306-images-pinned-to-digests](/docs/policies-based-on-kubescape-controls/kubescape-c-0306-images-pinned-to-digests.md) | imageDigestExemptRepositories |
+| [C-0090](https://kubescape.io/docs/controls/c-0090/) | CVE-2022-39328-grafana-auth-bypass | [kubescape-c-0090-grafana-cve-version](/docs/policies-based-on-kubescape-controls/kubescape-c-0090-grafana-cve-version.md) | not configurable |
+| [C-0091](https://kubescape.io/docs/controls/c-0091/) | CVE-2022-47633-kyverno-signature-bypass | [kubescape-c-0091-kyverno-cve-version](/docs/policies-based-on-kubescape-controls/kubescape-c-0091-kyverno-cve-version.md) | not configurable |
 
 ## Testing Policies
 
