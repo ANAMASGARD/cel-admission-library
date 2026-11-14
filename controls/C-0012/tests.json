@@ -11,8 +11,7 @@
         "name": "Pod with container having env with sensitive key name and value not set is allowed",
         "template": "pod-for-list-items.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Pod with container having env with sensitive key name and value set to empty string is allowed",
@@ -34,8 +33,7 @@
         "name": "Pod with container having env without sensitive key name is allowed",
         "template": "pod.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Deployment with container having env with sensitive key name and non-empty value and not from sensitiveVlauesAllowed is blocked",
@@ -49,8 +47,7 @@
         "name": "Deployment with container having env with sensitive key name and value not set is allowed",
         "template": "deployment-for-list-items.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "Deployment with container having env with sensitive key name and value set to empty string is allowed",
@@ -72,15 +69,13 @@
         "name": "Deployment with container having env without sensitive key name is allowed",
         "template": "deployment.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "ConfigMap without data having sensitiveKey and not matching sensitiveValues is allowed",
         "template": "configmap.yaml",
         "expected": "pass",
-        "field_change_list": [
-        ]
+        "field_change_list": []
     },
     {
         "name": "ConfigMap with data having sensitiveKey and empty value is allowed",
@@ -222,6 +217,30 @@
         "expected": "pass",
         "field_change_list": [
             "data.log_level=debug"
+        ]
+    },
+    {
+        "name": "NEUTRAL with AKIAABCDEFGHIJKLMNOP",
+        "template": "pod.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.containers.[0].env=[{\"name\": \"NEUTRAL\", \"value\": \"AKIAABCDEFGHIJKLMNOP\"}]"
+        ]
+    },
+    {
+        "name": "NEUTRAL with bearer my-token",
+        "template": "pod.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.containers.[0].env=[{\"name\": \"NEUTRAL\", \"value\": \"bearer my-token\"}]"
+        ]
+    },
+    {
+        "name": "API_KEY with /var/run/token",
+        "template": "pod.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.containers.[0].env=[{\"name\": \"API_KEY\", \"value\": \"/var/run/token\"}]"
         ]
     }
 ]

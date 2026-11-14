@@ -1,0 +1,69 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0259-sensitive-environment-variables
+  labels:
+    controlId: C-0259
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0259/
+spec:
+  failurePolicy: Fail
+  paramKind:
+    apiVersion: kubescape.io/v1
+    kind: ControlConfiguration
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+      - pods/ephemeralcontainers
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - deployments
+      - replicasets
+      - daemonsets
+      - statefulsets
+    - apiGroups:
+      - batch
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - jobs
+      - cronjobs
+  variables:
+  - name: podSpec
+    expression: |-
+      object.kind == 'Pod' ? object.spec : object.kind == 'CronJob' ?
+        object.spec.jobTemplate.spec.template.spec : object.spec.template.spec
+  - name: containers
+    expression: |-
+      variables.podSpec.containers +
+      (has(variables.podSpec.initContainers) ? variables.podSpec.initContainers : []) +
+      (object.kind == 'Pod' && has(variables.podSpec.ephemeralContainers) ? variables.podSpec.ephemeralContainers : [])
+  validations:
+  - expression: |
+      variables.containers.all(c, !has(c.env) || c.env.all(e,
+        !has(e.value) || e.value == '' || e.value.startsWith('/') ||
+        params.settings.sensitiveKeyNamesAllowed.exists(k, e.name.lowerAscii().contains(k.lowerAscii())) ||
+        params.settings.sensitiveValuesAllowed.exists(v, v != '' && e.value.matches(v)) ||
+        (!params.settings.sensitiveKeyNames.exists(k, e.name.lowerAscii().contains(k.lowerAscii())) &&
+         (!variables.podSpec.containers.exists(regular, regular.name == c.name) ||
+          !params.settings.sensitiveValues.exists(v, e.value.matches('(?i)' + v))))
+      ))
+    reason: Invalid
+    message: A container environment variable contains sensitive information.

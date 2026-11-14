@@ -1,7 +1,7 @@
 # Kubescape C-0012: Deny if application credentials found in configuration files
 
 ## Why this policy is required:
-Developers store secrets in the Kubernetes configuration files, such as environment variables in the pod configuration. Such behavior is commonly seen in clusters that are monitored by Azure Security Center. Attackers who have access to those configurations, by querying the API server or by accessing those files on the developer’s endpoint, can steal the stored secrets and use them.Note, this control is configurable. See below the details.
+Developers store secrets in the Kubernetes configuration files, such as environment variables in the pod configuration. Such behavior is commonly seen in clusters that are monitored by Azure Security Center. Attackers who have access to those configurations, by querying the API server or by accessing those files on the developer’s endpoint, can steal the stored secrets and use them. Note, this control is configurable. See below the details.
 
 ## Severity Level: High
 
@@ -29,9 +29,11 @@ Developers store secrets in the Kubernetes configuration files, such as environm
 * If configMap contains sensitive information.
 
 ## A note on `kubectl debug`:
-This policy checks every container in the Pod, not only the new debug container. By default, `kubectl debug` adds the debug container by updating the existing Pod, so the request is denied if any of the Pod's existing containers have sensitive environment variables that this policy does not permit, for example because the Pod was created before this policy was bound. A `--custom` profile can add environment variables to the new debug container, so the request is also denied if the profile adds a sensitive one that this policy does not permit. An environment variable is permitted when its value is listed in `sensitiveValuesAllowed` or its name matches a regular expression in `sensitiveKeyNamesAllowed`, even if its name or value matches `sensitiveKeyNames` or `sensitiveValues`. An environment variable with no `value` or an empty `value` is also permitted, even if its name matches `sensitiveKeyNames` and neither allow list matches it. This includes one that gets its value through `valueFrom`, for example from a Secret or ConfigMap key; this policy does not read that key when it checks the container.
+This policy checks every container in the Pod, not only the new debug container. By default, `kubectl debug` adds the debug container by updating the existing Pod, so the request is denied if any of the Pod's existing containers have sensitive environment variables that this policy does not permit, for example because the Pod was created before this policy was bound. A `--custom` profile can add environment variables to the new debug container, so the request is also denied if the profile adds a sensitive one that this policy does not permit. An environment variable is permitted when its value matches a nonempty regular expression in `sensitiveValuesAllowed` or its name contains a case-insensitive entry from `sensitiveKeyNamesAllowed`, even if its name or value matches `sensitiveKeyNames` or `sensitiveValues`. An environment variable with no `value` or an empty `value` is also permitted, even if its name matches `sensitiveKeyNames` and neither allow list matches it. This includes one that gets its value through `valueFrom`, for example from a Secret or ConfigMap key; this policy does not read that key when it checks the container.
 
 `kubectl debug --copy-to` instead creates a new Pod that copies the original Pod's containers and, by default, its init containers. This policy checks that new Pod when it is created, so it is denied if any copied container has a sensitive environment variable that this policy does not permit.
+
+Absolute paths in environment variables are exempt. ConfigMap checks inspect literal `data` values. Rego additionally decodes base64 text before matching it. Native CEL does not expose that decoder on the supported Kubernetes baseline. The existing admission policy also checks value patterns in init and ephemeral containers. The pinned Rego rule checks sensitive names in those containers and value patterns in regular containers.
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
