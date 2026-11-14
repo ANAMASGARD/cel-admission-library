@@ -16,7 +16,7 @@ spec:
     - apiGroups:   [""]
       apiVersions: ["v1"]
       operations:  ["CREATE", "UPDATE"]
-      resources:   ["pods"]
+      resources:   ["pods","pods/resize"]
     - apiGroups:   ["apps"]
       apiVersions: ["v1"]
       operations:  ["CREATE", "UPDATE"]
@@ -36,17 +36,23 @@ spec:
               ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : [])
               : []
       name: containers
+    - name: bounds
+      expression: >-
+        params == null ? {} : params.?settings.orValue({})
   validations:
-    - expression: >
-        variables.containers.all(container,
-        (!(!(has(container.resources)) || !(has(container.resources.requests)) || !(has(container.resources.requests.memory))) &&
-        quantity(string(params.settings.memoryRequestMin)).compareTo(quantity(string(container.resources.requests.memory))) != 1 &&
-        quantity(string(params.settings.memoryRequestMax)).compareTo(quantity(string(container.resources.requests.memory))) != -1 ))
-      messageExpression: 'object.kind + "/" + object.metadata.name + " contains container/s with memory request not set or they are not in the specified range! (see more at https://kubescape.io/docs/controls/c-0004/)"'
-    
-    - expression: >
-        variables.containers.all(container,
-        (!(!(has(container.resources)) || !(has(container.resources.limits)) || !(has(container.resources.limits.memory))) &&
-        quantity(string(params.settings.memoryLimitMin)).compareTo(quantity(string(container.resources.limits.memory))) != 1 &&
-        quantity(string(params.settings.memoryLimitMax)).compareTo(quantity(string(container.resources.limits.memory))) != -1 ))
-      messageExpression: 'object.kind + "/" + object.metadata.name + " contains container/s with memory limit not set or they are not in the specified range! (see more at https://kubescape.io/docs/controls/c-0004/)"'
+    - expression: >-
+        variables.containers.all(c,
+          c.?resources.?requests[?'memory'].hasValue() &&
+          (!has(variables.bounds.memoryRequestMin) ||
+            quantity(string(c.resources.requests.memory)).compareTo(quantity(string(variables.bounds.memoryRequestMin))) >= 0) &&
+          (!has(variables.bounds.memoryRequestMax) ||
+            quantity(string(c.resources.requests.memory)).compareTo(quantity(string(variables.bounds.memoryRequestMax))) <= 0))
+      message: Every container must set a memory request within the configured bounds.
+    - expression: >-
+        variables.containers.all(c,
+          c.?resources.?limits[?'memory'].hasValue() &&
+          (!has(variables.bounds.memoryLimitMin) ||
+            quantity(string(c.resources.limits.memory)).compareTo(quantity(string(variables.bounds.memoryLimitMin))) >= 0) &&
+          (!has(variables.bounds.memoryLimitMax) ||
+            quantity(string(c.resources.limits.memory)).compareTo(quantity(string(variables.bounds.memoryLimitMax))) <= 0))
+      message: Every container must set a memory limit within the configured bounds.

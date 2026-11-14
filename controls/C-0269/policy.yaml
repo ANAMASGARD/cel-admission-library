@@ -16,7 +16,7 @@ spec:
     - apiGroups:   [""]
       apiVersions: ["v1"]
       operations:  ["CREATE", "UPDATE"]
-      resources:   ["pods"]
+      resources:   ["pods","pods/resize"]
     - apiGroups:   ["apps"]
       apiVersions: ["v1"]
       operations:  ["CREATE", "UPDATE"]
@@ -36,10 +36,15 @@ spec:
               ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : [])
               : []
       name: containers
+    - name: bounds
+      expression: >-
+        params == null ? {} : params.?settings.orValue({})
   validations:
-    - expression: >
-        variables.containers.all(container,
-        (!(!(has(container.resources)) || !(has(container.resources.requests)) || !(has(container.resources.requests.memory))) &&
-        quantity(string(params.settings.memoryRequestMin)).compareTo(quantity(string(container.resources.requests.memory))) != 1 &&
-        quantity(string(params.settings.memoryRequestMax)).compareTo(quantity(string(container.resources.requests.memory))) != -1 ))
-      messageExpression: 'object.kind + "/" + object.metadata.name + " contains container/s with memory request not set or they are not in the specified range! (see more at https://kubescape.io/docs/controls/c-0269/)"'
+    - expression: >-
+        variables.containers.all(c,
+          c.?resources.?requests[?'memory'].hasValue() &&
+          (!has(variables.bounds.memoryRequestMin) ||
+            quantity(string(c.resources.requests.memory)).compareTo(quantity(string(variables.bounds.memoryRequestMin))) >= 0) &&
+          (!has(variables.bounds.memoryRequestMax) ||
+            quantity(string(c.resources.requests.memory)).compareTo(quantity(string(variables.bounds.memoryRequestMax))) <= 0))
+      message: Every container must set a memory request within the configured bounds.

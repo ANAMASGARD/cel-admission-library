@@ -34,3 +34,18 @@ jobs:
         python3 -m unittest discover -s scripts -p 'test_agent_test_crds.py'
         ./scripts/run-all-control-tests.sh
 
+
+  test-pod-resize:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: helm/kind-action@v1
+      with:
+        node_image: kindest/node:v1.35.1
+    - name: Exercise Pod resize admission
+      run: |
+        pip install -r requirements.txt
+        kubectl get --raw /api/v1 | jq -e '.resources | any(.name == "pods/resize")'
+        for id in 0004 0050 0268 0269 0270 0271; do
+          (cd "controls/C-${id}" && python3 ../../scripts/run-control-tests.py)
+        done

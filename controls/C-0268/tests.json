@@ -143,5 +143,27 @@
             "spec.initContainers.[0].image=registry.k8s.io/e2e-test-images/busybox:1.36.1-1",
             "spec.initContainers.[0].resources.requests.cpu=50m"
         ]
+    },
+    {
+        "name": "Pod cpu resize within the configured maximum",
+        "template": "resize-pod.yaml",
+        "base_template": "resize-pod.yaml",
+        "subresource": "resize",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.containers.[0].resources.requests.cpu=2",
+            "spec.containers.[0].resources.limits.cpu=2"
+        ]
+    },
+    {
+        "name": "Pod cpu resize above the configured maximum",
+        "template": "resize-pod.yaml",
+        "base_template": "resize-pod.yaml",
+        "subresource": "resize",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.containers.[0].resources.requests.cpu=6",
+            "spec.containers.[0].resources.limits.cpu=6"
+        ]
     }
 ]

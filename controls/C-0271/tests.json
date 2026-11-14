@@ -143,5 +143,27 @@
             "spec.initContainers.[0].image=registry.k8s.io/e2e-test-images/busybox:1.36.1-1",
             "spec.initContainers.[0].resources.limits.memory=128Mi"
         ]
+    },
+    {
+        "name": "Pod memory resize within the configured maximum",
+        "template": "resize-pod.yaml",
+        "base_template": "resize-pod.yaml",
+        "subresource": "resize",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.containers.[0].resources.requests.memory=512Mi",
+            "spec.containers.[0].resources.limits.memory=512Mi"
+        ]
+    },
+    {
+        "name": "Pod memory resize above the configured maximum",
+        "template": "resize-pod.yaml",
+        "base_template": "resize-pod.yaml",
+        "subresource": "resize",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.containers.[0].resources.requests.memory=8Gi",
+            "spec.containers.[0].resources.limits.memory=8Gi"
+        ]
     }
 ]

@@ -16,7 +16,7 @@ spec:
     - apiGroups:   [""]
       apiVersions: ["v1"]
       operations:  ["CREATE", "UPDATE"]
-      resources:   ["pods"]
+      resources:   ["pods","pods/resize"]
     - apiGroups:   ["apps"]
       apiVersions: ["v1"]
       operations:  ["CREATE", "UPDATE"]
@@ -36,12 +36,23 @@ spec:
               ? object.spec.jobTemplate.spec.template.spec.containers + (has(object.spec.jobTemplate.spec.template.spec.initContainers) ? object.spec.jobTemplate.spec.template.spec.initContainers : [])
               : []
       name: containers
+    - name: bounds
+      expression: >-
+        params == null ? {} : params.?settings.orValue({})
   validations:
-    - expression: >
-        variables.containers.all(container, (!(!(has(container.resources)) || !(has(container.resources.requests)) || !(has(container.resources.requests.cpu))) &&
-        quantity(string(params.settings.cpuRequestMin)).compareTo(quantity(string(container.resources.requests.cpu))) != 1 &&
-        quantity(string(params.settings.cpuRequestMax)).compareTo(quantity(string(container.resources.requests.cpu))) != -1) &&
-        (!(!(has(container.resources.limits)) || !(has(container.resources.limits.cpu))) &&
-        quantity(string(params.settings.cpuLimitMin)).compareTo(quantity(string(container.resources.limits.cpu))) != 1 &&
-        quantity(string(params.settings.cpuLimitMax)).compareTo(quantity(string(container.resources.limits.cpu))) != -1))
-      messageExpression: 'object.kind + "/" + object.metadata.name + " contains container/s with cpu limit or request not set or they are not in the specified range! (see more at https://kubescape.io/docs/controls/c-0050/)"'
+    - expression: >-
+        variables.containers.all(c,
+          c.?resources.?requests[?'cpu'].hasValue() &&
+          (!has(variables.bounds.cpuRequestMin) ||
+            quantity(string(c.resources.requests.cpu)).compareTo(quantity(string(variables.bounds.cpuRequestMin))) >= 0) &&
+          (!has(variables.bounds.cpuRequestMax) ||
+            quantity(string(c.resources.requests.cpu)).compareTo(quantity(string(variables.bounds.cpuRequestMax))) <= 0))
+      message: Every container must set a CPU request within the configured bounds.
+    - expression: >-
+        variables.containers.all(c,
+          c.?resources.?limits[?'cpu'].hasValue() &&
+          (!has(variables.bounds.cpuLimitMin) ||
+            quantity(string(c.resources.limits.cpu)).compareTo(quantity(string(variables.bounds.cpuLimitMin))) >= 0) &&
+          (!has(variables.bounds.cpuLimitMax) ||
+            quantity(string(c.resources.limits.cpu)).compareTo(quantity(string(variables.bounds.cpuLimitMax))) <= 0))
+      message: Every container must set a CPU limit within the configured bounds.

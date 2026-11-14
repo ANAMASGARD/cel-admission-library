@@ -200,5 +200,27 @@
             "spec.initContainers.[0].resources.requests.cpu=250m",
             "spec.initContainers.[0].resources.limits.cpu=500m"
         ]
+    },
+    {
+        "name": "Pod cpu resize within the configured maximum",
+        "template": "resize-pod.yaml",
+        "base_template": "resize-pod.yaml",
+        "subresource": "resize",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.containers.[0].resources.requests.cpu=2",
+            "spec.containers.[0].resources.limits.cpu=2"
+        ]
+    },
+    {
+        "name": "Pod cpu resize above the configured maximum",
+        "template": "resize-pod.yaml",
+        "base_template": "resize-pod.yaml",
+        "subresource": "resize",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.containers.[0].resources.requests.cpu=6",
+            "spec.containers.[0].resources.limits.cpu=6"
+        ]
     }
 ]

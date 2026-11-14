@@ -29,3 +29,7 @@ Ephemeral containers (added with `kubectl debug`) are not checked, because the K
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+### Configuring ranges on upgrade
+
+The shipped configuration now requires the resource field with a minimum of zero and omits the maximum. Reapply your explicit bounds to keep the earlier example ranges (CPU requests 0.1–5 cores, CPU limits 0.5–5 cores, memory requests 0.125–4 GiB, memory limits 0.25–4 GiB). Each bound is optional. This policy also checks a Pod update through `pods/resize` on clusters that serve that subresource. The API server can default a missing request from its limit before admission.
