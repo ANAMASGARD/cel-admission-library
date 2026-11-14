@@ -1,0 +1,24 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0209-review-namespaces
+  labels:
+    controlId: C-0209
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0209/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - namespaces
+  validations:
+  - expression: 'false'
+    message: Review this Namespace as required by the benchmark.

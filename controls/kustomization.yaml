@@ -79,3 +79,7 @@ resources:
 - C-0303/policy.yaml
 - C-0317/policy.yaml
 - C-0304/policy.yaml
+- C-0036/policy.yaml
+- C-0039/policy.yaml
+- C-0209/policy.yaml
+- C-0232/policy.yaml

@@ -1,0 +1,24 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0036-review-validatingwebhookconfigurations
+  labels:
+    controlId: C-0036
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0036/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - admissionregistration.k8s.io
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - validatingwebhookconfigurations
+  validations:
+  - expression: 'false'
+    message: Review this ValidatingWebhookConfiguration as required by the benchmark.

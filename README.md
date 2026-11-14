@@ -129,6 +129,10 @@ kubectl -n policy-example run nginx --image=nginx --restart=Never
 | [C-0303](https://kubescape.io/docs/controls/c-0303/) | Agent Sandbox resource ceilings | [kubescape-c-0303-sandbox-resource-limits](/docs/policies-based-on-kubescape-controls/kubescape-c-0303-sandbox-resource-limits.md) | sandboxCpuLimitMax, sandboxMemoryLimitMax |
 | [C-0317](https://kubescape.io/docs/controls/c-0317/) | Agent Substrate Worker Pod resource ceilings | [kubescape-c-0317-worker-resource-ceilings](/docs/policies-based-on-kubescape-controls/kubescape-c-0317-worker-resource-ceilings.md) | workerCpuLimitMax, workerMemoryLimitMax |
 | [C-0304](https://kubescape.io/docs/controls/c-0304/) | Agent Sandbox image provenance | [kubescape-c-0304-agent-image-provenance](/docs/policies-based-on-kubescape-controls/kubescape-c-0304-agent-image-provenance.md) | imageRepositoryAllowList, floatingImageTags |
+| [C-0036](https://kubescape.io/docs/controls/c-0036/) | Validate admission controller (validating) | [kubescape-c-0036-review-validatingwebhookconfigurations](/docs/policies-based-on-kubescape-controls/kubescape-c-0036-review-validatingwebhookconfigurations.md) | not configurable |
+| [C-0039](https://kubescape.io/docs/controls/c-0039/) | Validate admission controller (mutating) | [kubescape-c-0039-review-mutatingwebhookconfigurations](/docs/policies-based-on-kubescape-controls/kubescape-c-0039-review-mutatingwebhookconfigurations.md) | not configurable |
+| [C-0209](https://kubescape.io/docs/controls/c-0209/) | Create administrative boundaries between resources using namespaces | [kubescape-c-0209-review-namespaces](/docs/policies-based-on-kubescape-controls/kubescape-c-0209-review-namespaces.md) | not configurable |
+| [C-0232](https://kubescape.io/docs/controls/c-0232/) | Manage Kubernetes RBAC users with AWS IAM Authenticator for Kubernetes or Upgrade to AWS CLI v1.16.156 | [kubescape-c-0232-review-roles](/docs/policies-based-on-kubescape-controls/kubescape-c-0232-review-roles.md) | not configurable |
 
 ## Testing Policies
 

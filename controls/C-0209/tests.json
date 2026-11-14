@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Resource emits an advisory",
+    "template": "namespace.yaml",
+    "expected": "warn",
+    "binding_template": "policy-binding-warn.yaml"
+  },
+  {
+    "name": "Unrelated workload",
+    "template": "deployment.yaml",
+    "expected": "pass",
+    "binding_template": "policy-binding-warn.yaml"
+  }
+]
