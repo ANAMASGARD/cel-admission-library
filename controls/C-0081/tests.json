@@ -107,5 +107,21 @@
         "field_change_list": [
             "spec.template.spec.initContainers=[{\"name\": \"setup\", \"image\": \"argoproj/argocd:v2.1.8\", \"command\": [\"sh\", \"-c\", \"true\"]}]"
         ]
+    },
+    {
+        "name": "Argo CD numeric tag above int64 passes without a CEL error",
+        "template": "deployment.yaml",
+        "expected": "pass",
+        "field_change_list": [
+            "spec.template.spec.containers.[0].image=argocd:v9999999999999999999999999.0.0"
+        ]
+    },
+    {
+        "name": "Argo CD vulnerable 1.x patch above int64 is denied",
+        "template": "deployment.yaml",
+        "expected": "fail",
+        "field_change_list": [
+            "spec.template.spec.containers.[0].image=argocd:v1.5.9999999999999999999999999"
+        ]
     }
 ]

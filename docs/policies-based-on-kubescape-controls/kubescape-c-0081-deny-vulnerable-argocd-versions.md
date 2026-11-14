@@ -23,3 +23,5 @@ A tag that is not a plain three part number, for example `v2.1` or `v2.1.0-rc1`,
 
 ## Implementing this policy in the Cluster:
 [Refer here for using the policy in the cluster](https://github.com/kubescape/cel-admission-library#using-the-library)
+
+The applicability filter uses the same repository segment and container lists as the validation. A Deployment with only a lookalike image falls outside the control. The Rego filter uses a substring and checks main containers only. See [issue #126](https://github.com/kubescape/cel-admission-library/issues/126).
