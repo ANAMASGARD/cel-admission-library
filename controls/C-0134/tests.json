@@ -1,0 +1,31 @@
+[
+  {
+    "name": "Unrelated Pod",
+    "template": "pod.yaml",
+    "expected": "pass"
+  },
+  {
+    "name": "Matching component",
+    "template": "pod.yaml",
+    "expected": "warn",
+    "binding_template": "policy-binding-warn.yaml",
+    "field_change_list": [
+      "metadata.name=control-plane-test",
+      "metadata.namespace=kube-system",
+      "spec.containers.[0].command=[\"kube-apiserver\"]",
+      "spec.containers.[0].args=[\"--request-timeout\"]"
+    ]
+  },
+  {
+    "name": "Compliant component",
+    "template": "pod.yaml",
+    "expected": "pass",
+    "binding_template": "policy-binding-warn.yaml",
+    "field_change_list": [
+      "metadata.name=control-plane-test",
+      "metadata.namespace=kube-system",
+      "spec.containers.[0].command=[\"kube-apiserver\"]",
+      "spec.containers.[0].args=[]"
+    ]
+  }
+]

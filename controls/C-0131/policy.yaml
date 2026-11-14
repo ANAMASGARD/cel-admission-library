@@ -1,0 +1,42 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: kubescape-c-0131-audit-log-maxage
+  labels:
+    controlId: C-0131
+  annotations:
+    controlUrl: https://kubescape.io/docs/controls/c-0131/
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+  matchConditions:
+  - name: control-plane-component
+    expression: |-
+      has(object.metadata.namespace) && object.metadata.namespace == 'kube-system' &&
+      object.spec.containers.size() == 1 && has(object.spec.containers[0].command) &&
+      object.spec.containers[0].command.size() > 0 &&
+      object.spec.containers[0].command[0].endsWith('kube-apiserver')
+  variables:
+  - name: flags
+    expression: |-
+      object.spec.containers[0].command +
+      (has(object.spec.containers[0].args) ? object.spec.containers[0].args : [])
+  - name: values
+    expression: |-
+      variables.flags.filter(a, a.findAll('--audit-log-maxage=[^ ]+').size() == 1)
+        .map(a, a.find('--audit-log-maxage=[^ ]+').substring(19))
+  validations:
+  - expression: |-
+      variables.flags.exists(a, a.contains('--audit-log-maxage')) &&
+      variables.values.all(v, !v.matches('^-?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$') || double(v) >= 30.0)
+    message: Ensure that the API Server --audit-log-maxage argument is set to 30 or as appropriate.
